@@ -10,9 +10,12 @@ import type { DashboardData, OnchainAnalytics } from '@/lib/types';
  *
  * This is what the frontend will call to get all dashboard data at once.
  */
-export async function GET() {
+export async function GET(request: Request) {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    // Auto-detect base URL from request headers (works in Vercel)
+    const host = request.headers.get('host') || 'localhost:3000';
+    const protocol = host.includes('localhost') ? 'http' : 'https';
+    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || `${protocol}://${host}`;
 
     // Fetch all data in parallel for better performance
     const [holdersResponse, twitterResponse] = await Promise.all([
