@@ -10,7 +10,7 @@ export default function Dashboard() {
             🌙 Snoozies NFT Dashboard
           </h1>
           <p className="text-xl text-purple-200">
-            Community Analytics & Insights
+            Real-time Community Analytics & Insights
           </p>
         </header>
 
