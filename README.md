@@ -86,8 +86,8 @@ NEXT_PUBLIC_MINTIFY_API_KEY=your_mintify_api_key_here
 # Base Chain RPC URL
 NEXT_PUBLIC_BASE_RPC_URL=https://mainnet.base.org
 
-# Basescan API Key (optional but recommended)
-BASESCAN_API_KEY=your_basescan_api_key_here
+# Etherscan API Key (for Base chain via Basescan)
+ETHERSCAN_API_KEY=your_etherscan_api_key_here
 
 # Alchemy API Key (for token balance analysis)
 ALCHEMY_API_KEY=your_alchemy_api_key_here
@@ -108,11 +108,12 @@ NEXT_PUBLIC_CHAIN_ID=8453
 - Generate a new API key
 - Copy to `NEXT_PUBLIC_MINTIFY_API_KEY`
 
-#### 2. Basescan API (Optional but Recommended)
-- Visit [Basescan](https://basescan.org/apis)
+#### 2. Etherscan API (For Base Chain)
+- Visit [Etherscan](https://etherscan.io/apis)
 - Create a free account
 - Generate an API key
-- Copy to `BASESCAN_API_KEY`
+- Copy to `ETHERSCAN_API_KEY`
+- **Note:** Basescan (Base chain explorer) uses Etherscan's infrastructure
 - **Why?** Provides detailed transaction history for wallet analysis
 
 #### 3. Alchemy API
@@ -215,6 +216,21 @@ To use this dashboard for a different NFT collection:
 
 ### Deploy to Vercel (Recommended)
 
+#### Option 1: Using Vercel CLI
+
+```bash
+# Login to Vercel
+npx vercel login
+
+# Deploy to preview
+npx vercel
+
+# Deploy to production
+npx vercel --prod
+```
+
+#### Option 2: Using Vercel Dashboard
+
 1. **Push to GitHub**
    ```bash
    git push origin main
@@ -227,11 +243,20 @@ To use this dashboard for a different NFT collection:
 
 3. **Configure Environment Variables**
    - In Vercel dashboard, go to Settings → Environment Variables
-   - Add all variables from `.env`
+   - Add all variables from `.env.local`:
+     - `ALCHEMY_API_KEY`
+     - `ETHERSCAN_API_KEY`
+     - `NEXT_PUBLIC_MINTIFY_API_KEY`
+     - `TWITTER_BEARER_TOKEN`
+     - `NEXT_PUBLIC_NFT_CONTRACT`
+     - `NEXT_PUBLIC_CHAIN_ID`
+     - `NEXT_PUBLIC_BASE_RPC_URL`
 
 4. **Deploy**
    - Vercel automatically deploys on push
    - Your dashboard will be live at `your-project.vercel.app`
+
+See [DEPLOY.md](./DEPLOY.md) for detailed deployment instructions.
 
 ### Other Platforms
 
