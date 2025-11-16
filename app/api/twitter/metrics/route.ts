@@ -19,10 +19,19 @@ export async function GET() {
     const bearerToken = process.env.TWITTER_BEARER_TOKEN;
 
     if (!bearerToken) {
-      return NextResponse.json(
-        { error: 'Twitter API credentials not configured' },
-        { status: 500 }
-      );
+      // Return empty data instead of error so dashboard still loads
+      console.warn('Twitter API credentials not configured - returning empty metrics');
+      return NextResponse.json({
+        metrics: {
+          totalMembers: 0,
+          combinedFollowers: 0,
+          averageFollowersPerMember: 0,
+          verifiedAccountsCount: 0,
+          topInfluencers: [],
+        },
+        timestamp: new Date().toISOString(),
+        warning: 'Twitter API credentials not configured'
+      });
     }
 
     // Fetch members from both Twitter lists

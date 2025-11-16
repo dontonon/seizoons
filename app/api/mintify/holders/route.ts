@@ -14,10 +14,14 @@ export async function GET() {
     const apiKey = process.env.NEXT_PUBLIC_MINTIFY_API_KEY;
 
     if (!apiKey) {
-      return NextResponse.json(
-        { error: 'Mintify API key not configured' },
-        { status: 500 }
-      );
+      // Return empty data instead of error so dashboard still loads
+      console.warn('Mintify API key not configured - returning empty holder list');
+      return NextResponse.json({
+        holders: [],
+        totalHolders: 0,
+        timestamp: new Date().toISOString(),
+        warning: 'Mintify API key not configured'
+      });
     }
 
     // Fetch holders from Mintify API
