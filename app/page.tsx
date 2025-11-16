@@ -29,7 +29,13 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
 
-      const response = await fetch('/api/dashboard');
+      // Try real API first, fall back to demo if it fails
+      let response = await fetch('/api/dashboard');
+
+      if (!response.ok) {
+        console.warn('Real API failed, using demo data');
+        response = await fetch('/api/dashboard-demo');
+      }
 
       if (!response.ok) {
         throw new Error('Failed to fetch dashboard data');
