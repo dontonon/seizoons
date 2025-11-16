@@ -14,6 +14,7 @@ export const MINTIFY_API_BASE = 'https://api.mintify.com';
 
 /**
  * Base Chain Configuration
+ * Note: Using ETHERSCAN_API_KEY for Basescan (same infrastructure)
  */
 export const BASE_RPC_URL = process.env.NEXT_PUBLIC_BASE_RPC_URL || 'https://mainnet.base.org';
 export const BASESCAN_API_URL = 'https://api.basescan.org/api';

@@ -27,7 +27,8 @@ export async function GET(request: Request) {
     }
 
     const addresses = addressesParam.split(',').slice(0, MAX_WALLETS_TO_ANALYZE);
-    const basescanApiKey = process.env.BASESCAN_API_KEY;
+    // Use ETHERSCAN_API_KEY for Base chain (Basescan uses Etherscan infrastructure)
+    const basescanApiKey = process.env.ETHERSCAN_API_KEY;
 
     // Analyze wallets in chunks to avoid rate limits
     const chunks = chunkArray(addresses, 5);

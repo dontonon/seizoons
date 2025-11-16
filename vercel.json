@@ -1,0 +1,16 @@
+{
+  "buildCommand": "npm run build",
+  "installCommand": "npm install",
+  "framework": "nextjs",
+  "env": {
+    "NEXT_PUBLIC_MINTIFY_API_KEY": "@mintify_api_key",
+    "NEXT_PUBLIC_BASE_RPC_URL": "https://mainnet.base.org",
+    "ETHERSCAN_API_KEY": "@etherscan_api_key",
+    "ALCHEMY_API_KEY": "@alchemy_api_key",
+    "TWITTER_API_KEY": "@twitter_api_key",
+    "TWITTER_API_SECRET": "@twitter_api_secret",
+    "TWITTER_BEARER_TOKEN": "@twitter_bearer_token",
+    "NEXT_PUBLIC_NFT_CONTRACT": "0x61a85534f124781231BaB486b111534D9653f19a",
+    "NEXT_PUBLIC_CHAIN_ID": "8453"
+  }
+}
