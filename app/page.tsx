@@ -78,7 +78,7 @@ export default function Dashboard() {
           <ul className="text-purple-200 space-y-2">
             <li>✅ Built with Next.js 15 + TypeScript</li>
             <li>✅ Styled with Tailwind CSS</li>
-            <li>✅ Ready for Netlify deployment</li>
+            <li>✅ Ready for Vercel deployment</li>
             <li>🔄 Next step: Connect to live APIs (Mintify, Alchemy, Twitter)</li>
           </ul>
         </div>
