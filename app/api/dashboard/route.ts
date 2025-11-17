@@ -15,17 +15,35 @@ export async function GET() {
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
 
     // Fetch all data in parallel for better performance
+    // Using Alchemy API for holder data (provides addresses array)
     const [holdersResponse, twitterResponse] = await Promise.all([
-      fetch(`${baseUrl}/api/mintify/holders`),
+      fetch(`${baseUrl}/api/nft/holders-alchemy`),
       fetch(`${baseUrl}/api/twitter/metrics`),
     ]);
 
-    if (!holdersResponse.ok || !twitterResponse.ok) {
-      throw new Error('Failed to fetch data from one or more sources');
+    if (!holdersResponse.ok) {
+      const errorText = await holdersResponse.text();
+      throw new Error(`Failed to fetch holders: ${errorText}`);
     }
 
     const holdersData = await holdersResponse.json();
-    const twitterData = await twitterResponse.json();
+
+    // Twitter is optional - use fallback if it fails
+    let twitterData;
+    if (twitterResponse.ok) {
+      twitterData = await twitterResponse.json();
+    } else {
+      console.log('⚠️ Twitter API failed, using fallback');
+      twitterData = {
+        metrics: {
+          totalMembers: 0,
+          combinedFollowers: 0,
+          averageFollowersPerMember: 0,
+          verifiedAccountsCount: 0,
+          topInfluencers: []
+        }
+      };
+    }
 
     // Get list of holder addresses for wallet analysis
     const holderAddresses = (holdersData.holders || [])
@@ -34,29 +52,37 @@ export async function GET() {
       .slice(0, 100); // Limit to 100 for performance
 
     // Fetch wallet analytics, token balances, and advanced analytics
-    const addressesParam = holderAddresses.join(',');
-    const holdersJsonParam = encodeURIComponent(JSON.stringify(holdersData.holders || []));
-    const [walletAnalyticsResponse, tokenBalancesResponse, advancedAnalyticsResponse] = await Promise.all([
-      fetch(`${baseUrl}/api/onchain/wallet-analytics?addresses=${addressesParam}`),
-      fetch(`${baseUrl}/api/onchain/token-balances?addresses=${addressesParam}`),
-      fetch(`${baseUrl}/api/onchain/advanced-analytics?addresses=${addressesParam}&holders=${holdersJsonParam}`),
-    ]);
+    // Only if we have addresses to analyze
+    let walletAnalyticsResponse, tokenBalancesResponse, advancedAnalyticsResponse;
 
-    const walletAnalyticsData = walletAnalyticsResponse.ok
+    if (holderAddresses.length > 0) {
+      const addressesParam = holderAddresses.join(',');
+      const holdersJsonParam = encodeURIComponent(JSON.stringify(holdersData.holders || []));
+      [walletAnalyticsResponse, tokenBalancesResponse, advancedAnalyticsResponse] = await Promise.all([
+        fetch(`${baseUrl}/api/onchain/wallet-analytics?addresses=${addressesParam}`),
+        fetch(`${baseUrl}/api/onchain/token-balances?addresses=${addressesParam}`),
+        fetch(`${baseUrl}/api/onchain/advanced-analytics?addresses=${addressesParam}&holders=${holdersJsonParam}`),
+      ]);
+    }
+
+    const walletAnalyticsData = (walletAnalyticsResponse && walletAnalyticsResponse.ok)
       ? await walletAnalyticsResponse.json()
       : null;
-    const tokenBalancesData = tokenBalancesResponse.ok
+    const tokenBalancesData = (tokenBalancesResponse && tokenBalancesResponse.ok)
       ? await tokenBalancesResponse.json()
       : null;
+
     let advancedAnalyticsData = null;
-    try {
-      if (advancedAnalyticsResponse.ok) {
-        advancedAnalyticsData = await advancedAnalyticsResponse.json();
-      } else {
-        console.log('⚠️ Advanced analytics failed, skipping');
+    if (advancedAnalyticsResponse) {
+      try {
+        if (advancedAnalyticsResponse.ok) {
+          advancedAnalyticsData = await advancedAnalyticsResponse.json();
+        } else {
+          console.log('⚠️ Advanced analytics failed, skipping');
+        }
+      } catch (err) {
+        console.log('⚠️ Error parsing advanced analytics:', err);
       }
-    } catch (err) {
-      console.log('⚠️ Error parsing advanced analytics:', err);
     }
 
     // Calculate holder distribution based on token counts
