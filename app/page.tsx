@@ -32,21 +32,41 @@ export default function Dashboard() {
   useEffect(() => {
     async function fetchDashboardData() {
       try {
-        // Fetch NFT holders from Mintify
-        const holdersRes = await fetch('/api/mintify/holders');
-        const holdersData = await holdersRes.json();
+        // Fetch NFT holders from Alchemy (direct blockchain data)
+        const holdersPromise = fetch('/api/nft/holders-alchemy')
+          .then(res => res.json())
+          .catch(err => {
+            console.error('Error fetching holders:', err);
+            return { totalHolders: 0 };
+          });
+
+        // Fetch Twitter metrics
+        const twitterPromise = fetch('/api/twitter/metrics')
+          .then(res => res.json())
+          .catch(err => {
+            console.error('Error fetching Twitter metrics:', err);
+            return { metrics: null };
+          });
+
+        // Wait for both to complete
+        const [holdersData, twitterData] = await Promise.all([
+          holdersPromise,
+          twitterPromise,
+        ]);
 
         const totalHolders = holdersData.totalHolders || 0;
+        const twitterMetrics = twitterData.metrics;
 
-        // Initialize stats with holder data
+        // Update stats with all data
         setStats(prev => ({
           ...prev,
           totalHolders,
+          twitterFollowers: twitterMetrics?.combinedFollowers || 0,
+          communityMembers: twitterMetrics?.totalMembers || 0,
+          avgFollowersPerMember: twitterMetrics?.averageFollowersPerMember || 0,
+          verifiedAccounts: twitterMetrics?.verifiedAccountsCount || 0,
           isLoading: false,
         }));
-
-        // Optionally fetch other data (Twitter, onchain analytics)
-        // These can be added as needed once APIs are configured
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -153,10 +173,10 @@ export default function Dashboard() {
             Your Snoozies NFT Dashboard is now fetching real data from multiple sources.
           </p>
           <ul className="text-purple-200 space-y-2">
-            <li>✅ Mintify API - NFT holder data (Base network)</li>
-            <li>✅ Alchemy API - Onchain analytics ready</li>
-            <li>⏳ Twitter API - Needs bearer token for community metrics</li>
-            <li>🎯 Contract: {stats.totalHolders > 0 ? `${stats.totalHolders} holders tracked` : 'Configuring...'}</li>
+            <li>✅ Alchemy NFT API - Real holder data from blockchain</li>
+            <li>✅ Twitter API - Live community metrics</li>
+            <li>✅ Onchain Analytics - Wallet & token data ready</li>
+            <li>🎯 {stats.totalHolders > 0 ? `${stats.totalHolders} holders` : 'Loading...'} • {stats.communityMembers > 0 ? `${stats.communityMembers} Twitter members` : 'Loading Twitter...'}</li>
           </ul>
         </div>
 
