@@ -78,10 +78,65 @@ export interface TwitterMetrics {
 }
 
 /**
+ * DeFi Protocol Usage
+ */
+export interface DeFiProtocolUsage {
+  protocolName: string;
+  protocolAddress: string;
+  userCount: number;
+  percentage: number;
+}
+
+/**
+ * Airdrop Token Holdings
+ */
+export interface AirdropHolding {
+  tokenName: string;
+  tokenSymbol: string;
+  tokenAddress: string;
+  holderCount: number;
+  percentage: number;
+}
+
+/**
+ * Transaction Timing Patterns
+ */
+export interface TransactionTiming {
+  hourDistribution: number[]; // 24 hours
+  dayDistribution: number[]; // 7 days (0=Sunday)
+  peakHour: number;
+  peakDay: string;
+}
+
+/**
+ * Wallet Behavior Categories
+ */
+export interface WalletBehaviorPattern {
+  category: 'Trader' | 'HODLer' | 'DeFi User' | 'NFT Collector' | 'Whale' | 'Bot';
+  count: number;
+  percentage: number;
+  avgTransactions: number;
+  avgGasSpent: number;
+}
+
+/**
+ * Advanced Analytics combining DeFi, Airdrops, Timing, and Behavior
+ */
+export interface AdvancedAnalytics {
+  defiProtocols: DeFiProtocolUsage[];
+  airdrops: AirdropHolding[];
+  timing: TransactionTiming;
+  behaviorPatterns: WalletBehaviorPattern[];
+  defiAdoption: number; // % of wallets using DeFi
+  airdropHunters: number; // % holding 3+ airdropped tokens
+}
+
+/**
  * Dashboard data combining all analytics
  */
 export interface DashboardData {
   onchain: OnchainAnalytics;
   twitter: TwitterMetrics;
+  advanced?: AdvancedAnalytics;
   lastUpdated: string;
 }

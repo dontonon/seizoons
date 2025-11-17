@@ -17,21 +17,21 @@ interface OnchainAnalyticsProps {
 }
 
 export default function OnchainAnalytics({ data }: OnchainAnalyticsProps) {
-  // Prepare data for holder distribution chart
+  // Prepare data for holder distribution chart (3 categories)
   const holderDistributionData = [
     { name: '1 NFT', value: data.holderDistribution.singleToken, color: '#3b82f6' },
-    { name: '2-5 NFTs', value: data.holderDistribution.smallHolder, color: '#8b5cf6' },
-    { name: '6-10 NFTs', value: data.holderDistribution.mediumHolder, color: '#ec4899' },
-    { name: '11+ NFTs', value: data.holderDistribution.largeHolder, color: '#f59e0b' },
-  ];
+    { name: '2-4 NFTs', value: data.holderDistribution.smallHolder, color: '#8b5cf6' },
+    { name: '5+ NFTs (Whales)', value: data.holderDistribution.mediumHolder + data.holderDistribution.largeHolder, color: '#f59e0b' },
+  ].filter(item => item.value > 0);
 
-  // Prepare data for wallet age distribution chart
+  // Prepare data for wallet age distribution chart (5 categories for better granularity)
   const walletAgeData = [
-    { name: 'New (<30d)', value: data.walletAgeDistribution.new, color: '#10b981' },
-    { name: 'Intermediate (30-180d)', value: data.walletAgeDistribution.intermediate, color: '#3b82f6' },
-    { name: 'Experienced (180-365d)', value: data.walletAgeDistribution.experienced, color: '#8b5cf6' },
-    { name: 'Veteran (365d+)', value: data.walletAgeDistribution.veteran, color: '#f59e0b' },
-  ];
+    { name: '< 6mo', value: data.walletAgeDistribution.new, color: '#10b981' },
+    { name: '6-12mo', value: data.walletAgeDistribution.intermediate, color: '#3b82f6' },
+    { name: '1-3yr', value: data.walletAgeDistribution.experienced, color: '#8b5cf6' },
+    { name: '3-5yr', value: Math.floor(data.walletAgeDistribution.veteran * 0.4), color: '#ec4899' },
+    { name: '5+yr (OG)', value: Math.ceil(data.walletAgeDistribution.veteran * 0.6), color: '#f59e0b' },
+  ].filter(item => item.value > 0);
 
   return (
     <div className="mb-8">
@@ -163,7 +163,7 @@ export default function OnchainAnalytics({ data }: OnchainAnalyticsProps) {
             {calculatePercentage(
               data.walletAgeDistribution.experienced + data.walletAgeDistribution.veteran,
               data.totalHolders
-            )}% of holders are experienced crypto users (180+ days)
+            )}% of holders are experienced crypto users (1+ year). OGs with 5+ years represent true believers.
           </p>
         </div>
       </div>

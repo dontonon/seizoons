@@ -33,11 +33,13 @@ export async function GET() {
       .filter((addr: string) => addr && addr.startsWith('0x'))
       .slice(0, 100); // Limit to 100 for performance
 
-    // Fetch wallet analytics and token balances
+    // Fetch wallet analytics, token balances, and advanced analytics
     const addressesParam = holderAddresses.join(',');
-    const [walletAnalyticsResponse, tokenBalancesResponse] = await Promise.all([
+    const holdersJsonParam = encodeURIComponent(JSON.stringify(holdersData.holders || []));
+    const [walletAnalyticsResponse, tokenBalancesResponse, advancedAnalyticsResponse] = await Promise.all([
       fetch(`${baseUrl}/api/onchain/wallet-analytics?addresses=${addressesParam}`),
       fetch(`${baseUrl}/api/onchain/token-balances?addresses=${addressesParam}`),
+      fetch(`${baseUrl}/api/onchain/advanced-analytics?addresses=${addressesParam}&holders=${holdersJsonParam}`),
     ]);
 
     const walletAnalyticsData = walletAnalyticsResponse.ok
@@ -45,6 +47,9 @@ export async function GET() {
       : null;
     const tokenBalancesData = tokenBalancesResponse.ok
       ? await tokenBalancesResponse.json()
+      : null;
+    const advancedAnalyticsData = advancedAnalyticsResponse.ok
+      ? await advancedAnalyticsResponse.json()
       : null;
 
     // Calculate holder distribution based on token counts
@@ -69,6 +74,7 @@ export async function GET() {
     const dashboardData: DashboardData = {
       onchain: onchainAnalytics,
       twitter: twitterData.metrics,
+      advanced: advancedAnalyticsData?.analytics || undefined,
       lastUpdated: new Date().toISOString(),
     };
 
@@ -88,6 +94,7 @@ export async function GET() {
 
 /**
  * Calculate holder distribution based on NFT token counts
+ * Categories: 1 NFT, 2-4 NFTs, 5+ NFTs (Whales)
  */
 function calculateHolderDistribution(holders: any[]) {
   const distribution = {
@@ -97,19 +104,24 @@ function calculateHolderDistribution(holders: any[]) {
     largeHolder: 0,
   };
 
+  console.log('📊 Calculating holder distribution for', holders.length, 'holders');
+
   holders.forEach(holder => {
-    const count = holder.tokenCount || holder.balance || 1;
+    // Try multiple fields for token count
+    const count = holder.tokenCount || holder.balance || holder.tokenBalance || 1;
 
     if (count === 1) {
       distribution.singleToken++;
-    } else if (count <= 5) {
+    } else if (count >= 2 && count <= 4) {
       distribution.smallHolder++;
-    } else if (count <= 10) {
+    } else if (count >= 5) {
+      // 5+ NFTs = whale
       distribution.mediumHolder++;
-    } else {
-      distribution.largeHolder++;
     }
   });
+
+  console.log('📊 Distribution results:', distribution);
+  console.log('📊 Top holder example:', holders[0]);
 
   return distribution;
 }
