@@ -4,28 +4,12 @@ import { useEffect, useState } from 'react';
 
 interface DashboardStats {
   totalHolders: number;
-  twitterFollowers: number;
-  activeWallets: number;
-  averageWalletAge: number;
-  totalTransactions: number;
-  uniqueTokens: number;
-  communityMembers: number;
-  avgFollowersPerMember: number;
-  verifiedAccounts: number;
   isLoading: boolean;
 }
 
 export default function Dashboard() {
   const [stats, setStats] = useState<DashboardStats>({
     totalHolders: 0,
-    twitterFollowers: 0,
-    activeWallets: 0,
-    averageWalletAge: 0,
-    totalTransactions: 0,
-    uniqueTokens: 0,
-    communityMembers: 0,
-    avgFollowersPerMember: 0,
-    verifiedAccounts: 0,
     isLoading: true,
   });
 
@@ -33,40 +17,16 @@ export default function Dashboard() {
     async function fetchDashboardData() {
       try {
         // Fetch NFT holders from Alchemy (direct blockchain data)
-        const holdersPromise = fetch('/api/nft/holders-alchemy')
-          .then(res => res.json())
-          .catch(err => {
-            console.error('Error fetching holders:', err);
-            return { totalHolders: 0 };
-          });
-
-        // Fetch Twitter metrics
-        const twitterPromise = fetch('/api/twitter/metrics')
-          .then(res => res.json())
-          .catch(err => {
-            console.error('Error fetching Twitter metrics:', err);
-            return { metrics: null };
-          });
-
-        // Wait for both to complete
-        const [holdersData, twitterData] = await Promise.all([
-          holdersPromise,
-          twitterPromise,
-        ]);
+        const holdersRes = await fetch('/api/nft/holders-alchemy');
+        const holdersData = await holdersRes.json();
 
         const totalHolders = holdersData.totalHolders || 0;
-        const twitterMetrics = twitterData.metrics;
 
-        // Update stats with all data
-        setStats(prev => ({
-          ...prev,
+        // Update stats with holder data
+        setStats({
           totalHolders,
-          twitterFollowers: twitterMetrics?.combinedFollowers || 0,
-          communityMembers: twitterMetrics?.totalMembers || 0,
-          avgFollowersPerMember: twitterMetrics?.averageFollowersPerMember || 0,
-          verifiedAccounts: twitterMetrics?.verifiedAccountsCount || 0,
           isLoading: false,
-        }));
+        });
 
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
@@ -86,7 +46,7 @@ export default function Dashboard() {
             🌙 Snoozies NFT Dashboard
           </h1>
           <p className="text-xl text-purple-200">
-            Real-time Community Analytics & Insights
+            Real-time Holder Analytics on Base
           </p>
         </header>
 
@@ -99,67 +59,46 @@ export default function Dashboard() {
             icon="👥"
           />
           <StatCard
-            title="Twitter Community"
-            value={stats.isLoading ? '...' : stats.twitterFollowers > 0 ? stats.twitterFollowers.toLocaleString() : 'Setup API'}
-            subtitle="Combined followers"
-            icon="🐦"
+            title="Network"
+            value="Base"
+            subtitle="Layer 2 • Low Fees"
+            icon="⛓️"
           />
           <StatCard
-            title="Onchain Activity"
-            value={stats.isLoading ? '...' : 'Coming soon'}
-            subtitle="Active wallets (30d)"
-            icon="⛓️"
+            title="Collection"
+            value="Snoozies"
+            subtitle="ERC-721 NFT"
+            icon="🌙"
           />
         </div>
 
         {/* Main Content */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Onchain Analytics */}
+          {/* Holder Info */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <span className="mr-3">⛓️</span>
-              Onchain Analytics
+              <span className="mr-3">📊</span>
+              Collection Stats
             </h2>
             <div className="space-y-4">
-              <MetricRow
-                label="Average Wallet Age"
-                value={stats.isLoading ? '...' : stats.averageWalletAge > 0 ? `${Math.round(stats.averageWalletAge / 30)} months` : 'Coming soon'}
-              />
-              <MetricRow
-                label="Total Transactions"
-                value={stats.isLoading ? '...' : stats.totalTransactions > 0 ? stats.totalTransactions.toLocaleString() : 'Coming soon'}
-              />
-              <MetricRow
-                label="Unique Tokens Held"
-                value={stats.isLoading ? '...' : stats.uniqueTokens > 0 ? stats.uniqueTokens.toString() : 'Coming soon'}
-              />
-              <MetricRow label="Average Gas Spent" value="Coming soon" />
+              <MetricRow label="Total Holders" value={stats.isLoading ? '...' : stats.totalHolders.toLocaleString()} />
+              <MetricRow label="Unique Addresses" value={stats.isLoading ? '...' : stats.totalHolders.toLocaleString()} />
+              <MetricRow label="Blockchain" value="Base Network" />
+              <MetricRow label="Token Standard" value="ERC-721" />
             </div>
           </div>
 
-          {/* Twitter Metrics */}
+          {/* Contract Info */}
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <span className="mr-3">🐦</span>
-              Twitter Metrics
+              <span className="mr-3">🔍</span>
+              Contract Details
             </h2>
             <div className="space-y-4">
-              <MetricRow
-                label="Community Members"
-                value={stats.isLoading ? '...' : stats.communityMembers > 0 ? stats.communityMembers.toLocaleString() : 'Setup API'}
-              />
-              <MetricRow
-                label="Avg Followers/Member"
-                value={stats.isLoading ? '...' : stats.avgFollowersPerMember > 0 ? `${(stats.avgFollowersPerMember / 1000).toFixed(1)}K` : 'Setup API'}
-              />
-              <MetricRow
-                label="Verified Accounts"
-                value={stats.isLoading ? '...' : stats.verifiedAccounts > 0 ? stats.verifiedAccounts.toString() : 'Setup API'}
-              />
-              <MetricRow
-                label="Total Reach"
-                value={stats.isLoading ? '...' : stats.twitterFollowers > 0 ? `${(stats.twitterFollowers / 1000000).toFixed(1)}M` : 'Setup API'}
-              />
+              <MetricRow label="Contract Address" value="0x61a8...f19a" />
+              <MetricRow label="Network" value="Base (Chain ID: 8453)" />
+              <MetricRow label="Data Source" value="Alchemy API" />
+              <MetricRow label="Update Frequency" value="Real-time" />
             </div>
           </div>
         </div>
@@ -167,16 +106,16 @@ export default function Dashboard() {
         {/* Info Banner */}
         <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl p-8 border border-purple-500/30">
           <h3 className="text-2xl font-bold text-white mb-4">
-            🚀 Dashboard Connected to Real Data
+            🚀 Live Data from Base Blockchain
           </h3>
           <p className="text-purple-100 text-lg mb-4">
-            Your Snoozies NFT Dashboard is now fetching real data from multiple sources.
+            This dashboard fetches real NFT holder data directly from the Base blockchain via Alchemy API.
           </p>
           <ul className="text-purple-200 space-y-2">
-            <li>✅ Alchemy NFT API - Real holder data from blockchain</li>
-            <li>✅ Twitter API - Live community metrics</li>
-            <li>✅ Onchain Analytics - Wallet & token data ready</li>
-            <li>🎯 {stats.totalHolders > 0 ? `${stats.totalHolders} holders` : 'Loading...'} • {stats.communityMembers > 0 ? `${stats.communityMembers} Twitter members` : 'Loading Twitter...'}</li>
+            <li>✅ Real-time holder count: {stats.totalHolders > 0 ? `${stats.totalHolders} holders` : 'Loading...'}</li>
+            <li>✅ Direct blockchain data via Alchemy</li>
+            <li>✅ Base Network (Layer 2)</li>
+            <li>🔄 Updates automatically every 5 minutes</li>
           </ul>
         </div>
 
