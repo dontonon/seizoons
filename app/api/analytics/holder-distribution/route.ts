@@ -7,8 +7,7 @@ import { NFT_CONTRACT } from '@/lib/constants';
  * Analyzes how many NFTs each holder owns to identify:
  * - Small holders (1 NFT)
  * - Medium holders (2-5 NFTs)
- * - Large holders (6-10 NFTs)
- * - Whales (11+ NFTs)
+ * - Whales (5+ NFTs)
  */
 export async function GET() {
   try {
@@ -38,29 +37,43 @@ export async function GET() {
     );
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error('Alchemy API error:', response.status, errorText);
       throw new Error(`Alchemy API error: ${response.status}`);
     }
 
     const data = await response.json();
+    console.log('Alchemy response sample:', JSON.stringify(data.owners?.[0], null, 2));
+
     const owners = data.owners || [];
 
     // Analyze distribution
     let small = 0;  // 1 NFT
     let medium = 0; // 2-5 NFTs
-    let large = 0;  // 6-10 NFTs
-    let whales = 0; // 11+ NFTs
+    let whales = 0; // 5+ NFTs
 
     const holderDetails = owners.map((owner: any) => {
-      const tokenBalance = owner.tokenBalances?.[0]?.balance || 1;
-      const balance = parseInt(tokenBalance);
+      // Alchemy returns tokenBalance as the count of NFTs owned
+      // Try multiple possible data structures
+      let balance = 1; // default
+
+      if (owner.tokenBalance) {
+        // Sometimes it's a direct number
+        balance = parseInt(owner.tokenBalance);
+      } else if (owner.tokenBalances && Array.isArray(owner.tokenBalances)) {
+        // Sometimes it's an array of token IDs they own
+        balance = owner.tokenBalances.length;
+      } else if (typeof owner === 'object' && owner.ownerAddress) {
+        // Count how many times this address appears (shouldn't happen with this API)
+        balance = 1;
+      }
 
       if (balance === 1) small++;
       else if (balance <= 5) medium++;
-      else if (balance <= 10) large++;
       else whales++;
 
       return {
-        address: owner.ownerAddress,
+        address: owner.ownerAddress || owner.address || 'unknown',
         balance,
       };
     });
@@ -70,18 +83,19 @@ export async function GET() {
       .sort((a, b) => b.balance - a.balance)
       .slice(0, 10);
 
+    console.log('Distribution:', { small, medium, whales });
+    console.log('Top holder:', topHolders[0]);
+
     return NextResponse.json({
       distribution: {
         small,
         medium,
-        large,
         whales,
         total: owners.length,
       },
       percentages: {
         small: owners.length > 0 ? ((small / owners.length) * 100).toFixed(1) : 0,
         medium: owners.length > 0 ? ((medium / owners.length) * 100).toFixed(1) : 0,
-        large: owners.length > 0 ? ((large / owners.length) * 100).toFixed(1) : 0,
         whales: owners.length > 0 ? ((whales / owners.length) * 100).toFixed(1) : 0,
       },
       topHolders,

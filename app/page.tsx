@@ -9,7 +9,6 @@ interface DashboardData {
   distribution: {
     small: number;
     medium: number;
-    large: number;
     whales: number;
   };
   walletAge: {
@@ -17,6 +16,7 @@ interface DashboardData {
     intermediate: number;
     experienced: number;
     veteran: number;
+    og: number;
   };
   activity: {
     averageTransactions: number;
@@ -24,21 +24,23 @@ interface DashboardData {
   };
   topHolders: Array<{ address: string; balance: number }>;
   topTokens: Array<{ symbol: string; name: string; percentage: string }>;
+  topNFTs: Array<{ name: string; holders: number; percentage: string }>;
   isLoading: boolean;
   error: string | null;
 }
 
-const COLORS = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe'];
+const COLORS = ['#8b5cf6', '#a78bfa', '#c4b5fd', '#ddd6fe', '#e9d5ff'];
 
 export default function Dashboard() {
   const [data, setData] = useState<DashboardData>({
     totalHolders: 0,
     holderAddresses: [],
-    distribution: { small: 0, medium: 0, large: 0, whales: 0 },
-    walletAge: { new: 0, intermediate: 0, experienced: 0, veteran: 0 },
+    distribution: { small: 0, medium: 0, whales: 0 },
+    walletAge: { new: 0, intermediate: 0, experienced: 0, veteran: 0, og: 0 },
     activity: { averageTransactions: 0, activeWallets: 0 },
     topHolders: [],
     topTokens: [],
+    topNFTs: [],
     isLoading: true,
     error: null,
   });
@@ -66,14 +68,14 @@ export default function Dashboard() {
           ...prev,
           totalHolders,
           holderAddresses: holders,
-          isLoading: false // Show dashboard with holder count at least
+          isLoading: false
         }));
 
-        // Step 2: Fetch holder distribution (nice to have)
+        // Step 2: Fetch holder distribution
         try {
           console.log('Fetching distribution...');
           const distRes = await fetch('/api/analytics/holder-distribution', {
-            signal: AbortSignal.timeout(15000) // 15 second timeout
+            signal: AbortSignal.timeout(15000)
           });
           if (distRes.ok) {
             const distData = await distRes.json();
@@ -87,7 +89,7 @@ export default function Dashboard() {
           console.error('Distribution API failed:', err);
         }
 
-        // Step 3: Fetch other analytics (optional, don't block on these)
+        // Step 3: Fetch other analytics
         const addresses = holders.slice(0, 50).join(',');
 
         if (addresses) {
@@ -95,7 +97,7 @@ export default function Dashboard() {
           try {
             console.log('Fetching wallet age...');
             const ageRes = await fetch(`/api/analytics/wallet-age?addresses=${addresses}`, {
-              signal: AbortSignal.timeout(20000) // 20 second timeout
+              signal: AbortSignal.timeout(20000)
             });
             if (ageRes.ok) {
               const ageData = await ageRes.json();
@@ -118,7 +120,10 @@ export default function Dashboard() {
               const activityData = await activityRes.json();
               setData(prev => ({
                 ...prev,
-                activity: activityData.activity || prev.activity,
+                activity: {
+                  averageTransactions: activityData.activity?.averageTransactions || 0,
+                  activeWallets: activityData.insights?.activeWallets || 0,
+                },
               }));
             }
           } catch (err) {
@@ -129,7 +134,7 @@ export default function Dashboard() {
           try {
             console.log('Fetching token data...');
             const tokenRes = await fetch(`/api/analytics/token-summary?addresses=${addresses}`, {
-              signal: AbortSignal.timeout(30000) // This one is slowest
+              signal: AbortSignal.timeout(30000)
             });
             if (tokenRes.ok) {
               const tokenData = await tokenRes.json();
@@ -140,6 +145,23 @@ export default function Dashboard() {
             }
           } catch (err) {
             console.error('Token API failed:', err);
+          }
+
+          // NFT Portfolio overlap
+          try {
+            console.log('Fetching NFT portfolio...');
+            const nftRes = await fetch(`/api/analytics/nft-portfolio?addresses=${addresses}`, {
+              signal: AbortSignal.timeout(30000)
+            });
+            if (nftRes.ok) {
+              const nftData = await nftRes.json();
+              setData(prev => ({
+                ...prev,
+                topNFTs: nftData.topCollections || prev.topNFTs,
+              }));
+            }
+          } catch (err) {
+            console.error('NFT portfolio API failed:', err);
           }
         }
 
@@ -157,17 +179,17 @@ export default function Dashboard() {
   }, []);
 
   const distributionChartData = [
-    { name: '1 NFT', value: data.distribution.small, label: 'Small Holders' },
-    { name: '2-5 NFTs', value: data.distribution.medium, label: 'Medium Holders' },
-    { name: '6-10 NFTs', value: data.distribution.large, label: 'Large Holders' },
-    { name: '11+ NFTs', value: data.distribution.whales, label: 'Whales' },
+    { name: '1 NFT', value: data.distribution.small, label: 'Small' },
+    { name: '2-5 NFTs', value: data.distribution.medium, label: 'Medium' },
+    { name: '5+ NFTs', value: data.distribution.whales, label: 'Whales' },
   ];
 
   const ageChartData = [
-    { name: 'New', value: data.walletAge.new, label: '< 30 days' },
-    { name: 'Intermediate', value: data.walletAge.intermediate, label: '30-180 days' },
-    { name: 'Experienced', value: data.walletAge.experienced, label: '180-365 days' },
-    { name: 'Veteran', value: data.walletAge.veteran, label: '1+ year' },
+    { name: '< 6mo', value: data.walletAge.new },
+    { name: '6-12mo', value: data.walletAge.intermediate },
+    { name: '1-3yr', value: data.walletAge.experienced },
+    { name: '3-5yr', value: data.walletAge.veteran },
+    { name: '5+ yr', value: data.walletAge.og },
   ];
 
   if (data.isLoading) {
@@ -200,6 +222,9 @@ export default function Dashboard() {
 
   const hasDistribution = data.distribution.small > 0 || data.distribution.whales > 0;
   const hasActivity = data.activity.averageTransactions > 0;
+  const activeWalletPercentage = data.totalHolders > 0 && data.activity.activeWallets > 0
+    ? ((data.activity.activeWallets / data.totalHolders) * 100).toFixed(0)
+    : '0';
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
@@ -224,8 +249,8 @@ export default function Dashboard() {
           />
           <StatCard
             title="Whales"
-            value={data.distribution.whales.toString()}
-            subtitle="Holders with 11+ NFTs"
+            value={data.distribution.whales > 0 ? data.distribution.whales.toString() : 'Loading...'}
+            subtitle="Holders with 5+ NFTs"
             icon="🐋"
           />
           <StatCard
@@ -236,9 +261,7 @@ export default function Dashboard() {
           />
           <StatCard
             title="Active Wallets"
-            value={hasActivity && data.totalHolders > 0
-              ? `${((data.activity.activeWallets / data.totalHolders) * 100).toFixed(0)}%`
-              : 'Loading...'}
+            value={hasActivity ? `${activeWalletPercentage}%` : 'Loading...'}
             subtitle="5+ transactions"
             icon="🔥"
           />
@@ -273,10 +296,9 @@ export default function Dashboard() {
                 </PieChart>
               </ResponsiveContainer>
               <div className="mt-4 space-y-2">
-                <MetricRow label="Small Holders (1 NFT)" value={data.distribution.small.toLocaleString()} />
+                <MetricRow label="Small (1 NFT)" value={data.distribution.small.toLocaleString()} />
                 <MetricRow label="Medium (2-5 NFTs)" value={data.distribution.medium.toLocaleString()} />
-                <MetricRow label="Large (6-10 NFTs)" value={data.distribution.large.toLocaleString()} />
-                <MetricRow label="Whales (11+ NFTs)" value={data.distribution.whales.toLocaleString()} />
+                <MetricRow label="Whales (5+ NFTs)" value={data.distribution.whales.toLocaleString()} />
               </div>
             </div>
 
@@ -286,7 +308,7 @@ export default function Dashboard() {
                 <span className="mr-3">⏱️</span>
                 Wallet Age Distribution
               </h2>
-              {data.walletAge.new > 0 || data.walletAge.veteran > 0 ? (
+              {data.walletAge.new > 0 || data.walletAge.og > 0 ? (
                 <>
                   <ResponsiveContainer width="100%" height={300}>
                     <BarChart data={ageChartData}>
@@ -300,10 +322,11 @@ export default function Dashboard() {
                     </BarChart>
                   </ResponsiveContainer>
                   <div className="mt-4 space-y-2">
-                    <MetricRow label="New (< 30 days)" value={data.walletAge.new.toLocaleString()} />
-                    <MetricRow label="Intermediate (30-180d)" value={data.walletAge.intermediate.toLocaleString()} />
-                    <MetricRow label="Experienced (180-365d)" value={data.walletAge.experienced.toLocaleString()} />
-                    <MetricRow label="Veteran (1+ year)" value={data.walletAge.veteran.toLocaleString()} />
+                    <MetricRow label="New (< 6 months)" value={data.walletAge.new.toLocaleString()} />
+                    <MetricRow label="Intermediate (6-12mo)" value={data.walletAge.intermediate.toLocaleString()} />
+                    <MetricRow label="Experienced (1-3yr)" value={data.walletAge.experienced.toLocaleString()} />
+                    <MetricRow label="Veteran (3-5yr)" value={data.walletAge.veteran.toLocaleString()} />
+                    <MetricRow label="OG (5+ years)" value={data.walletAge.og.toLocaleString()} />
                   </div>
                 </>
               ) : (
@@ -318,18 +341,78 @@ export default function Dashboard() {
           </div>
         )}
 
-        {/* Bottom Row */}
+        {/* Middle Row - Tokens and NFTs */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Top Holders Leaderboard */}
+          {/* Top Tokens Held */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <span className="mr-3">💎</span>
+              Popular ERC20 Tokens
+            </h2>
+            {data.topTokens.length > 0 ? (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {data.topTokens.map((token, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 border-b border-white/10">
+                    <div>
+                      <span className="text-white font-semibold">{token.symbol}</span>
+                      <span className="text-purple-300 text-sm ml-2">{token.name}</span>
+                    </div>
+                    <span className="text-purple-200">{token.percentage}%</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-purple-300">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">⏳</div>
+                  <div>Analyzing token holdings...</div>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Top NFT Collections */}
+          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
+              <span className="mr-3">🖼️</span>
+              Other NFT Collections
+            </h2>
+            {data.topNFTs.length > 0 ? (
+              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+                {data.topNFTs.map((nft, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 border-b border-white/10">
+                    <div className="flex-1">
+                      <span className="text-white font-semibold">{nft.name}</span>
+                      <span className="text-purple-300 text-xs ml-2">
+                        {nft.holders} holders
+                      </span>
+                    </div>
+                    <span className="text-purple-200">{nft.percentage}%</span>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="h-[300px] flex items-center justify-center text-purple-300">
+                <div className="text-center">
+                  <div className="text-4xl mb-2">⏳</div>
+                  <div>Analyzing NFT portfolios...</div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Bottom Row - Leaderboard */}
+        <div className="grid grid-cols-1 gap-8 mb-12">
           <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
             <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
               <span className="mr-3">🏆</span>
               Top 10 Holders
             </h2>
             {data.topHolders.length > 0 ? (
-              <div className="space-y-3">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {data.topHolders.slice(0, 10).map((holder, index) => (
-                  <div key={holder.address} className="flex items-center justify-between py-2 border-b border-white/10">
+                  <div key={holder.address} className="flex items-center justify-between py-3 px-4 bg-white/5 rounded-lg border border-white/10">
                     <div className="flex items-center">
                       <span className="text-2xl mr-3">{index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `#${index + 1}`}</span>
                       <span className="text-purple-200 font-mono text-sm">
@@ -341,38 +424,10 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : (
-              <div className="h-[300px] flex items-center justify-center text-purple-300">
+              <div className="h-[200px] flex items-center justify-center text-purple-300">
                 <div className="text-center">
                   <div className="text-4xl mb-2">⏳</div>
                   <div>Loading leaderboard...</div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Top Tokens Held */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <span className="mr-3">💎</span>
-              Popular Tokens
-            </h2>
-            {data.topTokens.length > 0 ? (
-              <div className="space-y-3">
-                {data.topTokens.slice(0, 8).map((token, index) => (
-                  <div key={index} className="flex items-center justify-between py-2 border-b border-white/10">
-                    <div>
-                      <span className="text-white font-semibold">{token.symbol}</span>
-                      <span className="text-purple-300 text-sm ml-2">{token.name}</span>
-                    </div>
-                    <span className="text-purple-200">{token.percentage}% holders</span>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="h-[300px] flex items-center justify-center text-purple-300">
-                <div className="text-center">
-                  <div className="text-4xl mb-2">⏳</div>
-                  <div>Analyzing token holdings...</div>
                 </div>
               </div>
             )}
@@ -389,11 +444,11 @@ export default function Dashboard() {
           </p>
           <ul className="text-purple-200 space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2">
             <li>✅ {data.totalHolders} holders tracked</li>
-            <li>✅ Holder distribution analysis</li>
-            <li>✅ Wallet age & activity metrics</li>
-            <li>✅ Token holdings insights</li>
+            <li>✅ Holder distribution (whales = 5+ NFTs)</li>
+            <li>✅ Wallet age (5 categories)</li>
+            <li>✅ Token holdings analysis</li>
+            <li>✅ NFT portfolio overlap</li>
             <li>✅ Top 10 holders leaderboard</li>
-            <li>✅ Updates every 5 minutes</li>
           </ul>
         </div>
 
