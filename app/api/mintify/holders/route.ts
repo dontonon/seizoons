@@ -5,7 +5,7 @@ import { NFT_CONTRACT } from '@/lib/constants';
  * API Route: Fetch NFT Holders from Mintify
  *
  * This endpoint fetches the list of wallet addresses that hold Snoozies NFTs
- * from the Mintify API.
+ * from the Mintify API for Base network.
  *
  * @returns Array of holder addresses with their token counts
  */
@@ -15,18 +15,18 @@ export async function GET() {
 
     if (!apiKey) {
       return NextResponse.json(
-        { error: 'Mintify API key not configured' },
+        { error: 'Mintify API key not configured. Sign up at https://learn.mintify.xyz/api' },
         { status: 500 }
       );
     }
 
-    // Fetch holders from Mintify API
-    // According to Mintify docs: https://docs.mintify.com/other/api-data-and-analytics
+    // Fetch collection data from Mintify API (Base network)
+    // Using api-base.mintify.xyz for Base chain collections
     const response = await fetch(
-      `https://api.mintify.com/v1/collections/${NFT_CONTRACT}/holders`,
+      `https://api-base.mintify.xyz/collections/${NFT_CONTRACT}`,
       {
         headers: {
-          'Authorization': `Bearer ${apiKey}`,
+          'API-KEY': apiKey,
           'Content-Type': 'application/json',
         },
         // Cache for 5 minutes
@@ -35,18 +35,19 @@ export async function GET() {
     );
 
     if (!response.ok) {
-      throw new Error(`Mintify API error: ${response.status} ${response.statusText}`);
+      const errorText = await response.text();
+      throw new Error(`Mintify API error: ${response.status} ${response.statusText} - ${errorText}`);
     }
 
     const data = await response.json();
 
-    // Transform the data to our expected format
-    // Note: Actual response format may vary - adjust based on real API response
-    const holders = data.holders || data.data || [];
+    // Extract holder data from response
+    // The API returns collection info including holder count
+    const holderCount = data.holders || data.holder_count || data.unique_holders || 0;
 
     return NextResponse.json({
-      holders,
-      totalHolders: holders.length,
+      totalHolders: holderCount,
+      collectionData: data,
       timestamp: new Date().toISOString(),
     });
 
