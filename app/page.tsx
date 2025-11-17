@@ -14,29 +14,29 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        setIsLoading(true);
-        setError(null);
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
 
-        const response = await fetch('/api/dashboard');
+      const response = await fetch('/api/dashboard');
 
-        if (!response.ok) {
-          throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
-        }
-
-        const data = await response.json();
-        setDashboardData(data);
-
-      } catch (err) {
-        console.error('Error fetching dashboard data:', err);
-        setError(err instanceof Error ? err.message : 'Failed to load dashboard');
-      } finally {
-        setIsLoading(false);
+      if (!response.ok) {
+        throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
       }
-    }
 
+      const data = await response.json();
+      setDashboardData(data);
+
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchDashboardData();
   }, []);
 
@@ -62,7 +62,7 @@ export default function Dashboard() {
 
         {/* Error State */}
         {error && !isLoading && (
-          <ErrorMessage message={error} />
+          <ErrorMessage message={error} onRetry={fetchDashboardData} />
         )}
 
         {/* Dashboard Content */}
