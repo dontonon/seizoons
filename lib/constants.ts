@@ -31,6 +31,7 @@ export const TWITTER_LISTS = [
  */
 export const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes in milliseconds
 export const MAX_WALLETS_TO_ANALYZE = 100; // Limit for deep wallet analysis to avoid rate limits
+export const MAX_WALLETS_FOR_ADVANCED = 20; // Limit for advanced analytics (DeFi, timing, behavior)
 
 /**
  * Wallet age thresholds (in days)
@@ -69,13 +70,11 @@ export const DEFI_PROTOCOLS = {
 };
 
 /**
- * Known Airdrop Token Addresses
+ * Known Popular Token Addresses on Base Chain
+ * These are Base-native tokens that holders might have
  */
 export const AIRDROP_TOKENS = {
-  // Major airdrops that holders might have
-  ARB: { symbol: 'ARB', name: 'Arbitrum', address: '0x912CE59144191C1204E64559FE8253a0e49E6548' },
-  OP: { symbol: 'OP', name: 'Optimism', address: '0x4200000000000000000000000000000000000042' },
-  BLUR: { symbol: 'BLUR', name: 'Blur', address: '0x5283D291DBCF85356A21bA090E6db59121208b44' },
+  // Base chain native tokens
   DEGEN: { symbol: 'DEGEN', name: 'Degen', address: '0x4ed4E862860beD51a9570b96d89aF5E1B0Efefed' },
   BRETT: { symbol: 'BRETT', name: 'Brett', address: '0x532f27101965dd16442E59d40670FaF5eBB142E4' },
   TOSHI: { symbol: 'TOSHI', name: 'Toshi', address: '0xAC1Bd2486aAf3B5C0fc3Fd868558b082a531B2B4' },

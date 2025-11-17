@@ -48,9 +48,16 @@ export async function GET() {
     const tokenBalancesData = tokenBalancesResponse.ok
       ? await tokenBalancesResponse.json()
       : null;
-    const advancedAnalyticsData = advancedAnalyticsResponse.ok
-      ? await advancedAnalyticsResponse.json()
-      : null;
+    let advancedAnalyticsData = null;
+    try {
+      if (advancedAnalyticsResponse.ok) {
+        advancedAnalyticsData = await advancedAnalyticsResponse.json();
+      } else {
+        console.log('⚠️ Advanced analytics failed, skipping');
+      }
+    } catch (err) {
+      console.log('⚠️ Error parsing advanced analytics:', err);
+    }
 
     // Calculate holder distribution based on token counts
     const holderDistribution = calculateHolderDistribution(holdersData.holders || []);

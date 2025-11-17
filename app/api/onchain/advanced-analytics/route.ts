@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { BASESCAN_API_URL, DEFI_PROTOCOLS, AIRDROP_TOKENS, BEHAVIOR_THRESHOLDS, MAX_WALLETS_TO_ANALYZE } from '@/lib/constants';
+import { BASESCAN_API_URL, DEFI_PROTOCOLS, BEHAVIOR_THRESHOLDS, MAX_WALLETS_FOR_ADVANCED } from '@/lib/constants';
 import { chunkArray, sleep } from '@/lib/utils';
 import type { AdvancedAnalytics, DeFiProtocolUsage, AirdropHolding, WalletBehaviorPattern, TransactionTiming } from '@/lib/types';
 
@@ -8,9 +8,10 @@ import type { AdvancedAnalytics, DeFiProtocolUsage, AirdropHolding, WalletBehavi
  *
  * This endpoint analyzes holder wallets for:
  * - DeFi protocol usage (Uniswap, Aave, Compound, etc.)
- * - Airdrop holdings (ARB, OP, DEGEN, etc.)
  * - Transaction timing patterns
  * - Wallet behavior categorization
+ *
+ * Note: Airdrop detection disabled to improve performance
  *
  * @param searchParams - addresses: comma-separated list of wallet addresses
  * @param searchParams - holders: JSON array of holder objects with tokenCount
@@ -28,15 +29,19 @@ export async function GET(request: Request) {
       );
     }
 
-    const addresses = addressesParam.split(',').slice(0, MAX_WALLETS_TO_ANALYZE);
+    // Limit to smaller number for advanced analytics (faster)
+    const addresses = addressesParam.split(',').slice(0, MAX_WALLETS_FOR_ADVANCED);
     const holders = holdersParam ? JSON.parse(holdersParam) : [];
     const basescanApiKey = process.env.BASESCAN_API_KEY;
 
     if (!basescanApiKey) {
-      return NextResponse.json(
-        { error: 'Basescan API key not configured' },
-        { status: 500 }
-      );
+      console.log('⚠️ Basescan API key not configured - skipping advanced analytics');
+      // Return empty analytics instead of error
+      return NextResponse.json({
+        analytics: getEmptyAnalytics(),
+        walletsAnalyzed: 0,
+        timestamp: new Date().toISOString(),
+      });
     }
 
     console.log(`🔍 Analyzing ${addresses.length} wallets for advanced analytics...`);
@@ -147,8 +152,8 @@ async function analyzeWalletAdvanced(
     // Detect DeFi protocol usage
     const defiProtocols = detectDeFiUsage(transactions);
 
-    // Detect airdrop holdings (we'll need to check token balances)
-    const airdrops = await detectAirdropHoldings(address, basescanApiKey);
+    // Airdrop detection disabled for performance (too many API calls)
+    const airdrops: string[] = [];
 
     return {
       address,
@@ -191,39 +196,6 @@ function detectDeFiUsage(transactions: Transaction[]): string[] {
   });
 
   return Array.from(protocolsUsed);
-}
-
-/**
- * Detect which airdrop tokens a wallet holds
- */
-async function detectAirdropHoldings(
-  address: string,
-  basescanApiKey: string
-): Promise<string[]> {
-  try {
-    const airdropsHeld: string[] = [];
-
-    // Check each known airdrop token
-    for (const [key, token] of Object.entries(AIRDROP_TOKENS)) {
-      const balanceUrl = `${BASESCAN_API_URL}?module=account&action=tokenbalance&contractaddress=${token.address}&address=${address}&tag=latest&apikey=${basescanApiKey}`;
-
-      const response = await fetch(balanceUrl);
-      const data = await response.json();
-
-      if (data.status === '1' && data.result && parseInt(data.result) > 0) {
-        airdropsHeld.push(token.symbol);
-      }
-
-      // Small delay to avoid rate limits
-      await sleep(100);
-    }
-
-    return airdropsHeld;
-
-  } catch (error) {
-    console.error(`Error checking airdrops for ${address}:`, error);
-    return [];
-  }
 }
 
 /**
@@ -318,26 +290,8 @@ function aggregateAdvancedAnalytics(
     .sort((a, b) => b.userCount - a.userCount)
     .slice(0, 10); // Top 10
 
-  // Airdrop Holdings
-  const airdropHoldings = new Map<string, number>();
-  wallets.forEach(wallet => {
-    wallet.airdrops.forEach(airdrop => {
-      airdropHoldings.set(airdrop, (airdropHoldings.get(airdrop) || 0) + 1);
-    });
-  });
-
-  const airdrops: AirdropHolding[] = Array.from(airdropHoldings.entries())
-    .map(([symbol, holderCount]) => {
-      const token = Object.values(AIRDROP_TOKENS).find(t => t.symbol === symbol);
-      return {
-        tokenSymbol: symbol,
-        tokenName: token?.name || symbol,
-        tokenAddress: token?.address || '',
-        holderCount,
-        percentage: Math.round((holderCount / totalWallets) * 100),
-      };
-    })
-    .sort((a, b) => b.holderCount - a.holderCount);
+  // Airdrop Holdings (disabled for performance)
+  const airdrops: AirdropHolding[] = [];
 
   // Transaction Timing
   const timing = analyzeTransactionTiming(wallets);
@@ -379,5 +333,24 @@ function aggregateAdvancedAnalytics(
     behaviorPatterns,
     defiAdoption,
     airdropHunters: airdropHunterPercentage,
+  };
+}
+
+/**
+ * Get empty analytics structure (for when API key is missing or analysis fails)
+ */
+function getEmptyAnalytics(): AdvancedAnalytics {
+  return {
+    defiProtocols: [],
+    airdrops: [],
+    timing: {
+      hourDistribution: new Array(24).fill(0),
+      dayDistribution: new Array(7).fill(0),
+      peakHour: 0,
+      peakDay: 'Monday',
+    },
+    behaviorPatterns: [],
+    defiAdoption: 0,
+    airdropHunters: 0,
   };
 }
