@@ -25,6 +25,71 @@ interface DashboardData {
   topHolders: Array<{ address: string; balance: number }>;
   topTokens: Array<{ symbol: string; name: string; percentage: string }>;
   topNFTs: Array<{ name: string; holders: number; percentage: string }>;
+  defiUsage?: {
+    defiStats: {
+      totalUsers: number;
+      percentage: string;
+      averageProtocolsPerUser: string;
+    };
+    topProtocols: Array<{ protocol: string; users: number; percentage: string }>;
+    insights: {
+      mostPopularDEX: string;
+      lendingUsers: number;
+      bridgeUsers: number;
+    };
+  };
+  tokenBehavior?: {
+    diversity: {
+      minimalist: number;
+      moderate: number;
+      diverse: number;
+      power: number;
+    };
+    percentages: {
+      minimalist: string;
+      moderate: string;
+      diverse: string;
+      power: string;
+    };
+    stats: {
+      averageTokensPerWallet: string;
+      maxTokensFound: number;
+      minTokensFound: number;
+    };
+    airdropParticipation: Array<{ token: string; holders: number; percentage: string }>;
+    insights: {
+      holderType: string;
+      airdropHunters: number;
+    };
+  };
+  txTiming?: {
+    timing: {
+      peakHour: string;
+      peakDay: string;
+      weekendTraders: number;
+      weekdayTraders: number;
+    };
+    userTypes: {
+      nightOwls: number;
+      earlyBirds: number;
+      daytimeUsers: number;
+      eveningUsers: number;
+    };
+    percentages: {
+      nightOwls: string;
+      earlyBirds: string;
+      daytimeUsers: string;
+      eveningUsers: string;
+    };
+    gasStats: {
+      totalGasSpent: string;
+      averagePerWallet: string;
+    };
+    insights: {
+      communityType: string;
+      tradingStyle: string;
+    };
+  };
   isLoading: boolean;
   error: string | null;
 }
@@ -162,6 +227,57 @@ export default function Dashboard() {
             }
           } catch (err) {
             console.error('NFT portfolio API failed:', err);
+          }
+
+          // DeFi Protocol Usage
+          try {
+            console.log('Fetching DeFi usage...');
+            const defiRes = await fetch(`/api/analytics/defi-usage?addresses=${addresses}`, {
+              signal: AbortSignal.timeout(60000)
+            });
+            if (defiRes.ok) {
+              const defiData = await defiRes.json();
+              setData(prev => ({
+                ...prev,
+                defiUsage: defiData,
+              }));
+            }
+          } catch (err) {
+            console.error('DeFi usage API failed:', err);
+          }
+
+          // Token Behavior & Airdrops
+          try {
+            console.log('Fetching token behavior...');
+            const behaviorRes = await fetch(`/api/analytics/token-behavior?addresses=${addresses}`, {
+              signal: AbortSignal.timeout(60000)
+            });
+            if (behaviorRes.ok) {
+              const behaviorData = await behaviorRes.json();
+              setData(prev => ({
+                ...prev,
+                tokenBehavior: behaviorData,
+              }));
+            }
+          } catch (err) {
+            console.error('Token behavior API failed:', err);
+          }
+
+          // Transaction Timing
+          try {
+            console.log('Fetching transaction timing...');
+            const timingRes = await fetch(`/api/analytics/tx-timing?addresses=${addresses}`, {
+              signal: AbortSignal.timeout(60000)
+            });
+            if (timingRes.ok) {
+              const timingData = await timingRes.json();
+              setData(prev => ({
+                ...prev,
+                txTiming: timingData,
+              }));
+            }
+          } catch (err) {
+            console.error('Transaction timing API failed:', err);
           }
         }
 
@@ -434,13 +550,221 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Community DNA Section - Creative Analytics */}
+        <div className="mb-12">
+          <h2 className="text-3xl font-bold text-white mb-6 text-center">
+            🧬 Community DNA - Advanced Analytics
+          </h2>
+
+          {/* DeFi Protocol Usage */}
+          {data.defiUsage && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20 mb-8">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                <span className="mr-3">🏦</span>
+                DeFi Protocol Usage
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div className="bg-white/5 rounded-xl p-6 border border-purple-400/20">
+                  <div className="text-4xl font-bold text-purple-300 mb-2">
+                    {data.defiUsage.defiStats.percentage}%
+                  </div>
+                  <div className="text-white font-semibold mb-1">DeFi Users</div>
+                  <div className="text-purple-200 text-sm">
+                    {data.defiUsage.defiStats.totalUsers.toLocaleString()} holders use DeFi protocols
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-6 border border-purple-400/20">
+                  <div className="text-4xl font-bold text-purple-300 mb-2">
+                    {data.defiUsage.defiStats.averageProtocolsPerUser}
+                  </div>
+                  <div className="text-white font-semibold mb-1">Avg Protocols</div>
+                  <div className="text-purple-200 text-sm">Per DeFi user</div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-6 border border-purple-400/20">
+                  <div className="text-3xl font-bold text-purple-300 mb-2">
+                    {data.defiUsage.insights.mostPopularDEX}
+                  </div>
+                  <div className="text-white font-semibold mb-1">Most Popular DEX</div>
+                  <div className="text-purple-200 text-sm">
+                    {data.defiUsage.insights.bridgeUsers.toLocaleString()} use bridges
+                  </div>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <h4 className="text-lg font-semibold text-white mb-3">Top Protocols</h4>
+                {data.defiUsage.topProtocols.slice(0, 8).map((protocol, index) => (
+                  <div key={index} className="flex items-center justify-between py-2 px-4 bg-white/5 rounded-lg">
+                    <div className="flex items-center">
+                      <span className="text-lg mr-3">
+                        {index === 0 ? '🥇' : index === 1 ? '🥈' : index === 2 ? '🥉' : `${index + 1}.`}
+                      </span>
+                      <span className="text-white font-semibold">{protocol.protocol}</span>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-purple-200 font-semibold mr-3">{protocol.users} users</span>
+                      <span className="text-purple-300 text-sm">{protocol.percentage}%</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Token Behavior & Airdrops */}
+          {data.tokenBehavior && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20 mb-8">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                <span className="mr-3">💎</span>
+                Token Holding Behavior
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                <div className="bg-white/5 rounded-xl p-4 border border-purple-400/20">
+                  <div className="text-3xl font-bold text-purple-300 mb-2">
+                    {data.tokenBehavior.diversity.minimalist}
+                  </div>
+                  <div className="text-white font-semibold text-sm mb-1">Minimalist</div>
+                  <div className="text-purple-200 text-xs">1-2 tokens ({data.tokenBehavior.percentages.minimalist}%)</div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4 border border-purple-400/20">
+                  <div className="text-3xl font-bold text-purple-300 mb-2">
+                    {data.tokenBehavior.diversity.moderate}
+                  </div>
+                  <div className="text-white font-semibold text-sm mb-1">Moderate</div>
+                  <div className="text-purple-200 text-xs">3-4 tokens ({data.tokenBehavior.percentages.moderate}%)</div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4 border border-purple-400/20">
+                  <div className="text-3xl font-bold text-purple-300 mb-2">
+                    {data.tokenBehavior.diversity.diverse}
+                  </div>
+                  <div className="text-white font-semibold text-sm mb-1">Diverse</div>
+                  <div className="text-purple-200 text-xs">5-9 tokens ({data.tokenBehavior.percentages.diverse}%)</div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-4 border border-purple-400/20">
+                  <div className="text-3xl font-bold text-purple-300 mb-2">
+                    {data.tokenBehavior.diversity.power}
+                  </div>
+                  <div className="text-white font-semibold text-sm mb-1">Power Holders</div>
+                  <div className="text-purple-200 text-xs">10+ tokens ({data.tokenBehavior.percentages.power}%)</div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">Portfolio Stats</h4>
+                  <MetricRow label="Avg tokens per wallet" value={data.tokenBehavior.stats.averageTokensPerWallet} />
+                  <MetricRow label="Most diverse wallet" value={`${data.tokenBehavior.stats.maxTokensFound} tokens`} />
+                  <MetricRow label="Holder type" value={data.tokenBehavior.insights.holderType} />
+                  <MetricRow label="Airdrop hunters" value={data.tokenBehavior.insights.airdropHunters.toString()} />
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">Airdrop Participation</h4>
+                  <div className="space-y-2">
+                    {data.tokenBehavior.airdropParticipation.slice(0, 5).map((airdrop, index) => (
+                      <div key={index} className="flex items-center justify-between py-2 px-3 bg-white/5 rounded">
+                        <span className="text-white font-semibold">{airdrop.token}</span>
+                        <div>
+                          <span className="text-purple-200 mr-2">{airdrop.holders} holders</span>
+                          <span className="text-purple-300 text-sm">{airdrop.percentage}%</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Transaction Timing & Activity Patterns */}
+          {data.txTiming && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20 mb-8">
+              <h3 className="text-2xl font-bold text-white mb-6 flex items-center">
+                <span className="mr-3">⏰</span>
+                Activity Patterns & Timing
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <div className="bg-white/5 rounded-xl p-6 border border-purple-400/20">
+                  <div className="text-4xl font-bold text-purple-300 mb-2">
+                    {data.txTiming.timing.peakDay}
+                  </div>
+                  <div className="text-white font-semibold mb-1">Peak Activity Day</div>
+                  <div className="text-purple-200 text-sm">
+                    Peak hour: {data.txTiming.timing.peakHour}
+                  </div>
+                </div>
+                <div className="bg-white/5 rounded-xl p-6 border border-purple-400/20">
+                  <div className="text-4xl font-bold text-purple-300 mb-2">
+                    {data.txTiming.insights.communityType}
+                  </div>
+                  <div className="text-white font-semibold mb-1">Community Type</div>
+                  <div className="text-purple-200 text-sm">
+                    {data.txTiming.insights.tradingStyle}
+                  </div>
+                </div>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">User Activity Times</h4>
+                  <MetricRow
+                    label="🌙 Night Owls (10pm-6am)"
+                    value={`${data.txTiming.userTypes.nightOwls} (${data.txTiming.percentages.nightOwls}%)`}
+                  />
+                  <MetricRow
+                    label="🌅 Early Birds (6am-10am)"
+                    value={`${data.txTiming.userTypes.earlyBirds} (${data.txTiming.percentages.earlyBirds}%)`}
+                  />
+                  <MetricRow
+                    label="☀️ Daytime (10am-6pm)"
+                    value={`${data.txTiming.userTypes.daytimeUsers} (${data.txTiming.percentages.daytimeUsers}%)`}
+                  />
+                  <MetricRow
+                    label="🌆 Evening (6pm-10pm)"
+                    value={`${data.txTiming.userTypes.eveningUsers} (${data.txTiming.percentages.eveningUsers}%)`}
+                  />
+                </div>
+                <div>
+                  <h4 className="text-lg font-semibold text-white mb-3">Trading Patterns</h4>
+                  <MetricRow
+                    label="Weekday Traders"
+                    value={`${data.txTiming.timing.weekdayTraders}%`}
+                  />
+                  <MetricRow
+                    label="Weekend Traders"
+                    value={`${data.txTiming.timing.weekendTraders}%`}
+                  />
+                  <MetricRow
+                    label="Total Gas Spent"
+                    value={`${data.txTiming.gasStats.totalGasSpent} ETH`}
+                  />
+                  <MetricRow
+                    label="Avg Gas Per Wallet"
+                    value={`${data.txTiming.gasStats.averagePerWallet} ETH`}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Loading states for creative analytics */}
+          {!data.defiUsage && !data.tokenBehavior && !data.txTiming && (
+            <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-12 border border-purple-500/20 text-center">
+              <div className="text-6xl mb-4">🧬</div>
+              <div className="text-2xl font-bold text-white mb-2">Analyzing Community DNA...</div>
+              <div className="text-purple-300">
+                Fetching DeFi usage, token behavior, and activity patterns
+              </div>
+              <div className="text-purple-400 text-sm mt-4">
+                This may take 30-60 seconds depending on API rates
+              </div>
+            </div>
+          )}
+        </div>
+
         {/* Info Banner */}
         <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl p-8 border border-purple-500/30">
           <h3 className="text-2xl font-bold text-white mb-4">
-            🚀 Real-Time Analytics Powered by Alchemy
+            🚀 Real-Time Analytics Powered by Alchemy & Basescan
           </h3>
           <p className="text-purple-100 text-lg mb-4">
-            All data is fetched live from the Base blockchain and analyzed in real-time.
+            All data is fetched live from the Base blockchain and analyzed in real-time with advanced analytics.
           </p>
           <ul className="text-purple-200 space-y-2 grid grid-cols-1 md:grid-cols-2 gap-2">
             <li>✅ {data.totalHolders} holders tracked</li>
@@ -448,6 +772,10 @@ export default function Dashboard() {
             <li>✅ Wallet age (5 categories)</li>
             <li>✅ Token holdings analysis</li>
             <li>✅ NFT portfolio overlap</li>
+            <li>✅ DeFi protocol usage tracking</li>
+            <li>✅ Airdrop participation analysis</li>
+            <li>✅ Transaction timing patterns</li>
+            <li>✅ Community behavior insights</li>
             <li>✅ Top 10 holders leaderboard</li>
           </ul>
         </div>
