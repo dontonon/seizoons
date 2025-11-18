@@ -87,7 +87,7 @@ export default function GeographicHeatMap({ data }: GeographicHeatMapProps) {
       <div className="bg-slate-800/50 rounded-xl p-6 border border-purple-500/20">
         <h3 className="text-xl font-bold text-white mb-4">Holder Distribution by Region</h3>
         <ResponsiveContainer width="100%" height={300}>
-          <BarChart data={regionChartData} layout="horizontal">
+          <BarChart data={regionChartData} layout="vertical">
             <CartesianGrid strokeDasharray="3 3" stroke="#374151" />
             <XAxis
               type="number"
