@@ -11,13 +11,22 @@ import type { ChainActivity } from '@/lib/types';
  * - Active wallets per chain
  * - Multi-chain user identification
  * - Transaction volume and gas spending across chains
+ * - Popular ERC20 tokens held by the community
  */
+interface TokenData {
+  tokenSymbol: string;
+  tokenName: string;
+  holderCount: number;
+  holderPercentage: number;
+}
+
 interface CrossChainActivityProps {
   chains: ChainActivity[];
   multiChainUsers: number; // % active on 2+ chains
+  tokens?: TokenData[]; // Optional popular tokens data
 }
 
-export default function CrossChainActivity({ chains, multiChainUsers }: CrossChainActivityProps) {
+export default function CrossChainActivity({ chains, multiChainUsers, tokens }: CrossChainActivityProps) {
   // Prepare data for chain activity chart
   const chainData = chains.map(c => ({
     name: c.chainName,
@@ -284,6 +293,50 @@ export default function CrossChainActivity({ chains, multiChainUsers }: CrossCha
           </p>
         </div>
       </div>
+
+      {/* Popular ERC20 Tokens */}
+      {tokens && tokens.length > 0 && (
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mt-6">
+          <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            💎 Popular ERC20 Tokens Across Chains
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">
+            Top tokens held by the community - shows real DeFi engagement and cross-chain activity
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+            {tokens.map((token, index) => (
+              <div
+                key={index}
+                className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors border border-gray-200 dark:border-gray-600"
+              >
+                <div className="flex items-center space-x-3">
+                  <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {index + 1}
+                  </div>
+                  <div>
+                    <div className="font-semibold text-gray-900 dark:text-white text-base">
+                      {token.tokenSymbol}
+                    </div>
+                    <div className="text-xs text-gray-500 dark:text-gray-400">
+                      {token.tokenName}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="text-right">
+                  <div className="font-semibold text-gray-900 dark:text-white">
+                    {token.holderCount} holders
+                  </div>
+                  <div className="text-sm text-blue-600 dark:text-blue-400 font-medium">
+                    {token.holderPercentage}%
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
