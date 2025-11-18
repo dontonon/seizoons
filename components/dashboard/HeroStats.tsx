@@ -15,6 +15,9 @@ export default function HeroStats({ data }: HeroStatsProps) {
   // Calculate whale count (5+ NFTs)
   const whaleCount = data.holderDistribution.mediumHolder + data.holderDistribution.largeHolder;
 
+  // Calculate crypto veterans (3+ year old wallets)
+  const veteranPercentage = data.walletAgeDistribution.experienced + data.walletAgeDistribution.veteran;
+
   const stats = [
     {
       label: 'Total Holders',
@@ -38,9 +41,16 @@ export default function HeroStats({ data }: HeroStatsProps) {
       color: 'from-purple-500 to-purple-600',
     },
     {
+      label: 'Crypto Veterans',
+      value: `${veteranPercentage}%`,
+      description: '3+ year old wallets',
+      icon: '👑',
+      color: 'from-amber-500 to-amber-600',
+    },
+    {
       label: 'Avg Wallet Age',
       value: `${Math.round(data.averageWalletAge)} days`,
-      description: 'Experienced users',
+      description: 'Community experience',
       icon: '🔥',
       color: 'from-emerald-500 to-emerald-600',
     },
@@ -59,7 +69,7 @@ export default function HeroStats({ data }: HeroStatsProps) {
       </div>
 
       {/* Stats Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
         {stats.map((stat, index) => (
           <div
             key={index}
