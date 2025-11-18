@@ -188,8 +188,19 @@ export default function Dashboard() {
 
         {/* Footer */}
         <footer className="text-center mt-12 pb-8">
-          <p className="text-purple-300">
+          <p className="text-purple-300 mb-2">
             Built with ❤️ for the Snoozies Community
+          </p>
+          <p className="text-purple-400 text-sm">
+            Created by{' '}
+            <a
+              href="https://x.com/xtononx"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-purple-200 hover:text-white transition-colors underline"
+            >
+              Tonon @xtononx
+            </a>
           </p>
         </footer>
       </div>
