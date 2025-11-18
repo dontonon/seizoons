@@ -121,6 +121,18 @@ export interface WalletBehaviorPattern {
 }
 
 /**
+ * Cross-Chain Activity
+ */
+export interface ChainActivity {
+  chainName: string;
+  chainId: number;
+  activeWallets: number;
+  percentage: number;
+  totalTransactions: number;
+  avgGasSpent: number;
+}
+
+/**
  * Advanced Analytics combining DeFi, Airdrops, Timing, and Behavior
  */
 export interface AdvancedAnalytics {
@@ -162,6 +174,8 @@ export interface DashboardData {
   airdrops?: AirdropHolding[];
   airdropHunters?: number;
   behaviorPatterns?: WalletBehaviorPattern[];
+  chainActivity?: ChainActivity[];
+  multiChainUsers?: number;
   topTokens?: PopularToken[];
   topHolders?: TopHolder[];
   lastUpdated: string;

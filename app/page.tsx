@@ -11,6 +11,7 @@ import TransactionTimingAnalytics from '@/components/dashboard/TransactionTiming
 import DeFiProtocolUsage from '@/components/dashboard/DeFiProtocolUsage';
 import AirdropHoldingPatterns from '@/components/dashboard/AirdropHoldingPatterns';
 import WalletBehaviorCategories from '@/components/dashboard/WalletBehaviorCategories';
+import CrossChainActivity from '@/components/dashboard/CrossChainActivity';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/dashboard/ErrorMessage';
 import type { DashboardData } from '@/lib/types';
@@ -129,6 +130,16 @@ export default function Dashboard() {
             {dashboardData.behaviorPatterns && dashboardData.behaviorPatterns.length > 0 && (
               <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
                 <WalletBehaviorCategories patterns={dashboardData.behaviorPatterns} />
+              </div>
+            )}
+
+            {/* Cross-Chain Activity */}
+            {dashboardData.chainActivity && dashboardData.chainActivity.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <CrossChainActivity
+                  chains={dashboardData.chainActivity}
+                  multiChainUsers={dashboardData.multiChainUsers || 0}
+                />
               </div>
             )}
 
