@@ -63,18 +63,62 @@ export async function GET() {
 
     console.log('📍 Found addresses:', holderAddresses.length);
 
-    // For now, skip the complex analytics that require Basescan API
-    // Just show basic holder data
+    // Fetch wallet analytics and token balances if we have addresses
+    let walletAnalyticsData = null;
+    let tokenBalancesData = null;
+    let advancedAnalyticsData = null;
+
+    if (holderAddresses.length > 0) {
+      try {
+        const walletAnalyticsModule = await import('../onchain/wallet-analytics/route');
+        const tokenBalancesModule = await import('../onchain/token-balances/route');
+        const advancedAnalyticsModule = await import('../onchain/advanced-analytics/route');
+
+        const addressesParam = holderAddresses.join(',');
+        const holdersJsonParam = JSON.stringify(holdersData.holders || []);
+
+        // Create request objects for each API
+        const walletAnalyticsReq = new Request(`http://localhost:3000/api/onchain/wallet-analytics?addresses=${addressesParam}`);
+        const tokenBalancesReq = new Request(`http://localhost:3000/api/onchain/token-balances?addresses=${addressesParam}`);
+        const advancedAnalyticsReq = new Request(`http://localhost:3000/api/onchain/advanced-analytics?addresses=${addressesParam}&holders=${encodeURIComponent(holdersJsonParam)}`);
+
+        console.log('🔄 Fetching wallet analytics...');
+        const [walletAnalyticsRes, tokenBalancesRes, advancedAnalyticsRes] = await Promise.all([
+          walletAnalyticsModule.GET(walletAnalyticsReq),
+          tokenBalancesModule.GET(tokenBalancesReq),
+          advancedAnalyticsModule.GET(advancedAnalyticsReq),
+        ]);
+
+        if (walletAnalyticsRes.ok) {
+          walletAnalyticsData = await walletAnalyticsRes.json();
+          console.log('✅ Wallet analytics:', walletAnalyticsData);
+        }
+
+        if (tokenBalancesRes.ok) {
+          tokenBalancesData = await tokenBalancesRes.json();
+          console.log('✅ Token balances:', tokenBalancesData);
+        }
+
+        if (advancedAnalyticsRes.ok) {
+          advancedAnalyticsData = await advancedAnalyticsRes.json();
+          console.log('✅ Advanced analytics:', advancedAnalyticsData);
+        }
+      } catch (err) {
+        console.error('⚠️ Error fetching analytics:', err);
+      }
+    }
+
+    // Calculate holder distribution
     const holderDistribution = calculateHolderDistribution(holdersData.holders || []);
 
-    // Combine all onchain analytics with basic data
+    // Combine all onchain analytics
     const onchainAnalytics: OnchainAnalytics = {
       totalHolders: holdersData.totalHolders || 0,
-      uniqueTokensHeld: 0, // Will show 0 if no token balance API
-      averageTransactionCount: 0, // Will show 0 if no wallet analytics
-      averageWalletAge: 0, // Will show 0 if no wallet analytics
+      uniqueTokensHeld: tokenBalancesData?.uniqueTokenCount || 0,
+      averageTransactionCount: walletAnalyticsData?.analytics?.averageTransactionCount || 0,
+      averageWalletAge: walletAnalyticsData?.analytics?.averageWalletAge || 0,
       holderDistribution,
-      walletAgeDistribution: {
+      walletAgeDistribution: walletAnalyticsData?.analytics?.walletAgeDistribution || {
         new: 0,
         intermediate: 0,
         experienced: 0,
@@ -86,7 +130,7 @@ export async function GET() {
     const dashboardData: DashboardData = {
       onchain: onchainAnalytics,
       twitter: twitterData.metrics,
-      advanced: undefined, // Advanced analytics disabled for now
+      advanced: advancedAnalyticsData?.analytics || undefined,
       lastUpdated: new Date().toISOString(),
     };
 
