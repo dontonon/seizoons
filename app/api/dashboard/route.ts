@@ -75,11 +75,12 @@ export async function GET() {
         const advancedAnalyticsModule = await import('../onchain/advanced-analytics/route');
 
         const addressesParam = holderAddresses.join(',');
+        const totalHoldersCount = holdersData.totalHolders || holderAddresses.length;
 
         // Create request objects for each API
-        const walletAnalyticsReq = new Request(`http://localhost:3000/api/onchain/wallet-analytics?addresses=${addressesParam}`);
+        const walletAnalyticsReq = new Request(`http://localhost:3000/api/onchain/wallet-analytics?addresses=${addressesParam}&totalHolders=${totalHoldersCount}`);
         const tokenBalancesReq = new Request(`http://localhost:3000/api/onchain/token-balances?addresses=${addressesParam}`);
-        const advancedAnalyticsReq = new Request(`http://localhost:3000/api/onchain/advanced-analytics?addresses=${addressesParam}`);
+        const advancedAnalyticsReq = new Request(`http://localhost:3000/api/onchain/advanced-analytics?addresses=${addressesParam}&totalHolders=${totalHoldersCount}`);
 
         console.log('🔄 Fetching wallet analytics, token balances, and timing analytics...');
         const [walletAnalyticsRes, tokenBalancesRes, advancedAnalyticsRes] = await Promise.all([
@@ -158,6 +159,7 @@ export async function GET() {
       behaviorPatterns: advancedAnalyticsData?.analytics?.behaviorPatterns || [],
       chainActivity: advancedAnalyticsData?.chainActivity || [],
       multiChainUsers: advancedAnalyticsData?.multiChainUsers || 0,
+      nftCollections: advancedAnalyticsData?.nftCollections || [],
       topTokens: tokenBalancesData?.topTokens || [],
       topHolders,
       lastUpdated: new Date().toISOString(),

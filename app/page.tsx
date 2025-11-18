@@ -12,6 +12,7 @@ import DeFiProtocolUsage from '@/components/dashboard/DeFiProtocolUsage';
 import AirdropHoldingPatterns from '@/components/dashboard/AirdropHoldingPatterns';
 import WalletBehaviorCategories from '@/components/dashboard/WalletBehaviorCategories';
 import CrossChainActivity from '@/components/dashboard/CrossChainActivity';
+import NFTPortfolioAnalysis from '@/components/dashboard/NFTPortfolioAnalysis';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/dashboard/ErrorMessage';
 import type { DashboardData } from '@/lib/types';
@@ -143,6 +144,13 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* NFT Portfolio Analysis */}
+            {dashboardData.nftCollections && dashboardData.nftCollections.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <NFTPortfolioAnalysis collections={dashboardData.nftCollections} />
+              </div>
+            )}
+
             {/* Advanced Analytics - Temporarily Hidden */}
             {/* {dashboardData.advanced && (
               <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
@@ -167,10 +175,12 @@ export default function Dashboard() {
                 <div>
                   <h4 className="font-semibold text-white mb-2">Analytics Features</h4>
                   <ul className="space-y-1 text-sm">
-                    <li>✅ DeFi Protocol Usage</li>
+                    <li>✅ DeFi Protocol Usage (Cross-Chain)</li>
                     <li>✅ Airdrop Holdings Patterns</li>
                     <li>✅ Transaction Timing Analysis</li>
                     <li>✅ Wallet Behavior Categories</li>
+                    <li>✅ Cross-Chain Activity (8 EVM chains)</li>
+                    <li>✅ NFT Portfolio Analysis</li>
                   </ul>
                 </div>
               </div>

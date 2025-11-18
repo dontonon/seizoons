@@ -150,7 +150,7 @@ export default function DeFiProtocolUsage({ protocols, defiAdoption }: DeFiProto
           </ResponsiveContainer>
         </div>
         <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
-          {defiAdoption}% of holders are active DeFi users on Base chain. The community shows strong engagement with decentralized finance protocols, especially DEXes and lending platforms.
+          <strong>Cross-chain aggregated data:</strong> {defiAdoption}% of holders are active DeFi users across multiple chains (Base, Ethereum, Arbitrum, Polygon, Optimism, etc.). Protocols labeled &quot;multi-chain&quot; show usage across the entire EVM ecosystem.
         </p>
 
         {/* Protocol Breakdown */}

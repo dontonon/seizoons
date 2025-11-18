@@ -162,6 +162,20 @@ export interface TopHolder {
 }
 
 /**
+ * NFT Collection held by community members
+ */
+export interface NFTCollection {
+  name: string;
+  symbol: string;
+  contractAddress: string;
+  chain: string; // Ethereum, Base, etc.
+  holderCount: number;
+  holderPercentage: number;
+  floorPrice?: number; // in ETH
+  isBlueChip: boolean;
+}
+
+/**
  * Dashboard data combining all analytics
  */
 export interface DashboardData {
@@ -176,6 +190,7 @@ export interface DashboardData {
   behaviorPatterns?: WalletBehaviorPattern[];
   chainActivity?: ChainActivity[];
   multiChainUsers?: number;
+  nftCollections?: NFTCollection[];
   topTokens?: PopularToken[];
   topHolders?: TopHolder[];
   lastUpdated: string;

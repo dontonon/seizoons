@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { BASESCAN_API_URL, DEFI_PROTOCOLS, AIRDROP_TOKENS, BEHAVIOR_THRESHOLDS, MAX_WALLETS_FOR_ADVANCED } from '@/lib/constants';
 import { chunkArray, sleep } from '@/lib/utils';
-import type { AdvancedAnalytics, DeFiProtocolUsage, AirdropHolding, WalletBehaviorPattern, TransactionTiming, ChainActivity } from '@/lib/types';
+import type { AdvancedAnalytics, DeFiProtocolUsage, AirdropHolding, WalletBehaviorPattern, TransactionTiming, ChainActivity, NFTCollection } from '@/lib/types';
 
 /**
  * API Route: Advanced Wallet Analytics
@@ -21,6 +21,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const addressesParam = searchParams.get('addresses');
     const holdersParam = searchParams.get('holders');
+    const totalHoldersParam = searchParams.get('totalHolders');
 
     if (!addressesParam) {
       return NextResponse.json(
@@ -31,17 +32,20 @@ export async function GET(request: Request) {
 
     // Limit to smaller number for advanced analytics (faster)
     const addresses = addressesParam.split(',').slice(0, MAX_WALLETS_FOR_ADVANCED);
+    const totalHolders = totalHoldersParam ? parseInt(totalHoldersParam) : addresses.length;
     const holders = holdersParam ? JSON.parse(holdersParam) : [];
     const basescanApiKey = process.env.BASESCAN_API_KEY;
 
     if (!basescanApiKey) {
       console.log('⚠️ Basescan API key not configured - skipping advanced analytics');
       // Return empty analytics instead of error
-      const crossChain = getCrossChainActivity();
+      const crossChain = getCrossChainActivity(totalHolders);
+      const nftCollections = getNFTCollections(totalHolders);
       return NextResponse.json({
         analytics: getEmptyAnalytics(),
         chainActivity: crossChain.chainActivity,
         multiChainUsers: crossChain.multiChainUsers,
+        nftCollections,
         walletsAnalyzed: 0,
         timestamp: new Date().toISOString(),
       });
@@ -75,12 +79,14 @@ export async function GET(request: Request) {
       defiAdoption: `${analytics.defiAdoption}%`,
     });
 
-    const crossChain = getCrossChainActivity();
+    const crossChain = getCrossChainActivity(totalHolders);
+    const nftCollections = getNFTCollections(totalHolders);
 
     return NextResponse.json({
       analytics,
       chainActivity: crossChain.chainActivity,
       multiChainUsers: crossChain.multiChainUsers,
+      nftCollections,
       walletsAnalyzed: walletData.length,
       timestamp: new Date().toISOString(),
     });
@@ -366,13 +372,15 @@ function getEmptyAnalytics(): AdvancedAnalytics {
     52   // Saturday
   ];
 
-  // Create realistic DeFi protocol usage
+  // Create realistic DeFi protocol usage (CROSS-CHAIN AGGREGATED)
+  // These numbers represent usage across ALL chains (Base + Ethereum + Arbitrum + Polygon + Optimism + etc.)
   const defiProtocols: DeFiProtocolUsage[] = [
-    { protocolName: 'Uniswap', protocolAddress: '', userCount: 68, percentage: 34 },
-    { protocolName: 'Aerodrome', protocolAddress: '', userCount: 52, percentage: 26 },
-    { protocolName: 'BaseSwap', protocolAddress: '', userCount: 38, percentage: 19 },
-    { protocolName: 'Aave', protocolAddress: '', userCount: 24, percentage: 12 },
-    { protocolName: 'Compound', protocolAddress: '', userCount: 18, percentage: 9 },
+    { protocolName: 'Uniswap (multi-chain)', protocolAddress: '', userCount: 156, percentage: 78 }, // Base + ETH + ARB + OP + Polygon
+    { protocolName: 'Aave (multi-chain)', protocolAddress: '', userCount: 124, percentage: 62 }, // ETH + Polygon + ARB + OP + Base
+    { protocolName: 'Curve (multi-chain)', protocolAddress: '', userCount: 98, percentage: 49 }, // ETH + Polygon + ARB + OP
+    { protocolName: 'Aerodrome (Base)', protocolAddress: '', userCount: 72, percentage: 36 }, // Base only
+    { protocolName: 'Balancer (multi-chain)', protocolAddress: '', userCount: 58, percentage: 29 }, // ETH + Polygon + ARB
+    { protocolName: 'Compound (multi-chain)', protocolAddress: '', userCount: 45, percentage: 23 }, // ETH + Base + Polygon
   ];
 
   // Create realistic airdrop holdings (popular Base tokens)
@@ -402,25 +410,46 @@ function getEmptyAnalytics(): AdvancedAnalytics {
       peakDay: 'Wednesday',
     },
     behaviorPatterns,
-    defiAdoption: 34,
+    defiAdoption: 78, // % of wallets using DeFi across all chains (up from 34% Base-only)
     airdropHunters: 28, // 28% have 3+ different airdrops
   };
 }
 
 /**
+ * Get demo NFT collection portfolio data
+ * Shows which other NFT collections the community holds
+ * @param totalHolders - Total number of holders
+ */
+function getNFTCollections(totalHolders: number): NFTCollection[] {
+  return [
+    { name: 'Pudgy Penguins', symbol: 'PPG', contractAddress: '0xbd3531da5cf5857e7cfaa92426877b022e612cf8', chain: 'Ethereum', holderCount: Math.round(totalHolders * 0.18), holderPercentage: 18, floorPrice: 8.5, isBlueChip: true },
+    { name: 'Milady', symbol: 'MIL', contractAddress: '0x5af0d9827e0c53e4799bb226655a1de152a425a5', chain: 'Ethereum', holderCount: Math.round(totalHolders * 0.15), holderPercentage: 15, floorPrice: 3.2, isBlueChip: true },
+    { name: 'Azuki', symbol: 'AZUKI', contractAddress: '0xed5af388653567af2f388e6224dc7c4b3241c544', chain: 'Ethereum', holderCount: Math.round(totalHolders * 0.12), holderPercentage: 12, floorPrice: 11.8, isBlueChip: true },
+    { name: 'DeGods', symbol: 'DEGODS', contractAddress: '0x8821bee2ba0df28761afff119d66390d594cd280', chain: 'Ethereum', holderCount: Math.round(totalHolders * 0.11), holderPercentage: 11, floorPrice: 2.1, isBlueChip: true },
+    { name: 'Based Fellas', symbol: 'FELLAS', contractAddress: '0x1234...', chain: 'Base', holderCount: Math.round(totalHolders * 0.24), holderPercentage: 24, floorPrice: 0.15, isBlueChip: false },
+    { name: 'CryptoPunks', symbol: 'PUNK', contractAddress: '0xb47e3cd837ddf8e4c57f05d70ab865de6e193bbb', chain: 'Ethereum', holderCount: Math.round(totalHolders * 0.08), holderPercentage: 8, floorPrice: 35.5, isBlueChip: true },
+    { name: 'Bored Ape', symbol: 'BAYC', contractAddress: '0xbc4ca0eda7647a8ab7c2061c2e118a18a936f13d', chain: 'Ethereum', holderCount: Math.round(totalHolders * 0.06), holderPercentage: 6, floorPrice: 21.3, isBlueChip: true },
+    { name: 'OnChainMonkey', symbol: 'OCM', contractAddress: '0x960b7a6bcd451c9968473f7bbfd9be826efd549a', chain: 'Ethereum', holderCount: Math.round(totalHolders * 0.09), holderPercentage: 9, floorPrice: 0.85, isBlueChip: false },
+  ];
+}
+
+/**
  * Get demo cross-chain activity data
  * Shows which chains the community is active on
+ * @param totalHolders - Total number of holders (used for Base = 100%)
  */
-function getCrossChainActivity(): { chainActivity: ChainActivity[]; multiChainUsers: number } {
+function getCrossChainActivity(totalHolders: number): { chainActivity: ChainActivity[]; multiChainUsers: number } {
+  // Base is always 100% since all holders own the NFT on Base
+  // Other chains are realistic percentages of that total
   const chainActivity: ChainActivity[] = [
-    { chainName: 'Base', chainId: 8453, activeWallets: 200, percentage: 100, totalTransactions: 12450, avgGasSpent: 0.045 },
-    { chainName: 'Ethereum', chainId: 1, activeWallets: 156, percentage: 78, totalTransactions: 8920, avgGasSpent: 0.234 },
-    { chainName: 'Arbitrum', chainId: 42161, activeWallets: 98, percentage: 49, totalTransactions: 5680, avgGasSpent: 0.012 },
-    { chainName: 'Polygon', chainId: 137, activeWallets: 84, percentage: 42, totalTransactions: 4230, avgGasSpent: 0.008 },
-    { chainName: 'Optimism', chainId: 10, activeWallets: 72, percentage: 36, totalTransactions: 3890, avgGasSpent: 0.011 },
-    { chainName: 'zkSync', chainId: 324, activeWallets: 45, percentage: 23, totalTransactions: 1850, avgGasSpent: 0.006 },
-    { chainName: 'Katana', chainId: 1101, activeWallets: 28, percentage: 14, totalTransactions: 920, avgGasSpent: 0.004 },
-    { chainName: 'Unichain', chainId: 1301, activeWallets: 18, percentage: 9, totalTransactions: 450, avgGasSpent: 0.003 },
+    { chainName: 'Base', chainId: 8453, activeWallets: totalHolders, percentage: 100, totalTransactions: totalHolders * 62, avgGasSpent: 0.045 },
+    { chainName: 'Ethereum', chainId: 1, activeWallets: Math.round(totalHolders * 0.78), percentage: 78, totalTransactions: Math.round(totalHolders * 0.78 * 57), avgGasSpent: 0.234 },
+    { chainName: 'Arbitrum', chainId: 42161, activeWallets: Math.round(totalHolders * 0.49), percentage: 49, totalTransactions: Math.round(totalHolders * 0.49 * 58), avgGasSpent: 0.012 },
+    { chainName: 'Polygon', chainId: 137, activeWallets: Math.round(totalHolders * 0.42), percentage: 42, totalTransactions: Math.round(totalHolders * 0.42 * 50), avgGasSpent: 0.008 },
+    { chainName: 'Optimism', chainId: 10, activeWallets: Math.round(totalHolders * 0.36), percentage: 36, totalTransactions: Math.round(totalHolders * 0.36 * 54), avgGasSpent: 0.011 },
+    { chainName: 'zkSync', chainId: 324, activeWallets: Math.round(totalHolders * 0.23), percentage: 23, totalTransactions: Math.round(totalHolders * 0.23 * 41), avgGasSpent: 0.006 },
+    { chainName: 'Katana', chainId: 1101, activeWallets: Math.round(totalHolders * 0.14), percentage: 14, totalTransactions: Math.round(totalHolders * 0.14 * 33), avgGasSpent: 0.004 },
+    { chainName: 'Unichain', chainId: 1301, activeWallets: Math.round(totalHolders * 0.09), percentage: 9, totalTransactions: Math.round(totalHolders * 0.09 * 25), avgGasSpent: 0.003 },
   ];
 
   // 62% of holders are active on 2+ chains
