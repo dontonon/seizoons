@@ -132,11 +132,20 @@ export interface AdvancedAnalytics {
 }
 
 /**
+ * Popular Token with holder statistics
+ */
+export interface PopularToken extends TokenHolding {
+  holderCount: number;
+  holderPercentage: number;
+}
+
+/**
  * Dashboard data combining all analytics
  */
 export interface DashboardData {
   onchain: OnchainAnalytics;
   twitter: TwitterMetrics;
   advanced?: AdvancedAnalytics;
+  topTokens?: PopularToken[];
   lastUpdated: string;
 }

@@ -39,7 +39,7 @@ export async function GET(request: Request) {
 
     // Fetch token balances in chunks
     const chunks = chunkArray(addresses, 10);
-    const allTokens = new Map<string, TokenHolding>();
+    const tokenFrequency = new Map<string, { token: TokenHolding; holderCount: number }>();
     let totalTokensAcrossWallets = 0;
 
     for (const chunk of chunks) {
@@ -51,10 +51,13 @@ export async function GET(request: Request) {
       chunkResults.forEach(tokens => {
         totalTokensAcrossWallets += tokens.length;
         tokens.forEach(token => {
-          // Track unique tokens across all wallets
+          // Track token frequency (how many wallets hold each token)
           const key = token.tokenAddress.toLowerCase();
-          if (!allTokens.has(key)) {
-            allTokens.set(key, token);
+          if (!tokenFrequency.has(key)) {
+            tokenFrequency.set(key, { token, holderCount: 1 });
+          } else {
+            const existing = tokenFrequency.get(key)!;
+            existing.holderCount++;
           }
         });
       });
@@ -65,12 +68,21 @@ export async function GET(request: Request) {
       }
     }
 
-    // Get top tokens by frequency
-    const uniqueTokens = Array.from(allTokens.values());
+    // Get top tokens sorted by holder count
+    const topTokens = Array.from(tokenFrequency.values())
+      .sort((a, b) => b.holderCount - a.holderCount)
+      .slice(0, 20)
+      .map(({ token, holderCount }) => ({
+        ...token,
+        holderCount,
+        holderPercentage: Math.round((holderCount / addresses.length) * 100),
+      }));
+
+    const uniqueTokens = Array.from(tokenFrequency.values()).map(t => t.token);
 
     return NextResponse.json({
       uniqueTokenCount: uniqueTokens.length,
-      topTokens: uniqueTokens.slice(0, 20), // Top 20 tokens
+      topTokens, // Top 20 tokens with holder counts
       walletsAnalyzed: addresses.length,
       totalTokensAcrossWallets,
       timestamp: new Date().toISOString(),

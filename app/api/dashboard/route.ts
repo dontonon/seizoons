@@ -131,6 +131,7 @@ export async function GET() {
       onchain: onchainAnalytics,
       twitter: twitterData.metrics,
       advanced: advancedAnalyticsData?.analytics || undefined,
+      topTokens: tokenBalancesData?.topTokens || [],
       lastUpdated: new Date().toISOString(),
     };
 
