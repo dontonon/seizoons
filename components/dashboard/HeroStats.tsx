@@ -31,10 +31,10 @@ export default function HeroStats({ data }: HeroStatsProps) {
       color: 'from-orange-500 to-orange-600',
     },
     {
-      label: 'Avg Transactions',
-      value: formatNumber(data.averageTransactionCount),
-      description: 'Onchain activity',
-      icon: '⚡',
+      label: 'Token Diversity',
+      value: formatNumber(data.uniqueTokensHeld),
+      description: 'Unique tokens held',
+      icon: '💎',
       color: 'from-purple-500 to-purple-600',
     },
     {
@@ -51,10 +51,10 @@ export default function HeroStats({ data }: HeroStatsProps) {
       {/* Section Title */}
       <div className="mb-6">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
-          Why Partner with Snoozies?
+          Community Strength Metrics
         </h2>
         <p className="mt-2 text-gray-600 dark:text-gray-400">
-          Real community value backed by onchain data and social metrics
+          Real community value backed by onchain data and wallet intelligence
         </p>
       </div>
 

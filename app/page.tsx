@@ -5,7 +5,6 @@ import OnchainAnalytics from '@/components/dashboard/OnchainAnalytics';
 import AdvancedAnalytics from '@/components/dashboard/AdvancedAnalytics';
 import TwitterMetrics from '@/components/dashboard/TwitterMetrics';
 import HeroStats from '@/components/dashboard/HeroStats';
-import PopularTokens from '@/components/dashboard/PopularTokens';
 import TopHolders from '@/components/dashboard/TopHolders';
 import TransactionTimingAnalytics from '@/components/dashboard/TransactionTimingAnalytics';
 import DeFiProtocolUsage from '@/components/dashboard/DeFiProtocolUsage';
@@ -52,10 +51,38 @@ export default function Dashboard() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900">
       <div className="container mx-auto px-4 py-8">
+        {/* Creator Attribution Banner */}
+        <div className="mb-8 pt-4">
+          <div className="bg-gradient-to-r from-purple-600/30 via-blue-600/30 to-purple-600/30 rounded-2xl p-6 border border-purple-500/40 backdrop-blur-lg">
+            <div className="flex items-center justify-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-bold text-lg">T</span>
+                </div>
+                <div className="text-left">
+                  <div className="text-sm text-purple-200">Created by</div>
+                  <a
+                    href="https://x.com/xtononx"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-white font-bold text-lg hover:text-purple-300 transition-colors flex items-center space-x-1"
+                  >
+                    <span>Tonon</span>
+                    <span className="text-purple-300">@xtononx</span>
+                    <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                      <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+                    </svg>
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Header */}
-        <header className="text-center mb-12 pt-8">
+        <header className="text-center mb-12">
           <h1 className="text-5xl font-bold text-white mb-4">
-            🌙 Snoozies NFT Dashboard
+            Snoozies Intelligence
           </h1>
           <p className="text-xl text-purple-200">
             Advanced Community Analytics & Wallet Intelligence
@@ -86,13 +113,6 @@ export default function Dashboard() {
             <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
               <OnchainAnalytics data={dashboardData.onchain} />
             </div>
-
-            {/* Popular Tokens */}
-            {dashboardData.topTokens && dashboardData.topTokens.length > 0 && (
-              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
-                <PopularTokens tokens={dashboardData.topTokens} />
-              </div>
-            )}
 
             {/* Top 10 Holders */}
             {dashboardData.topHolders && dashboardData.topHolders.length > 0 && (
@@ -141,6 +161,7 @@ export default function Dashboard() {
                 <CrossChainActivity
                   chains={dashboardData.chainActivity}
                   multiChainUsers={dashboardData.multiChainUsers || 0}
+                  tokens={dashboardData.topTokens}
                 />
               </div>
             )}
