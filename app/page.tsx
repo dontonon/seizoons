@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import GeographicHeatMap from '@/components/dashboard/GeographicHeatMap';
 
 interface DashboardStats {
   totalHolders: number;
@@ -162,6 +163,11 @@ export default function Dashboard() {
               />
             </div>
           </div>
+        </div>
+
+        {/* Geographic Distribution */}
+        <div className="mb-12">
+          <GeographicHeatMap />
         </div>
 
         {/* Info Banner */}
