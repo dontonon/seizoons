@@ -7,6 +7,7 @@ import TwitterMetrics from '@/components/dashboard/TwitterMetrics';
 import HeroStats from '@/components/dashboard/HeroStats';
 import PopularTokens from '@/components/dashboard/PopularTokens';
 import TopHolders from '@/components/dashboard/TopHolders';
+import TransactionTimingAnalytics from '@/components/dashboard/TransactionTimingAnalytics';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/dashboard/ErrorMessage';
 import type { DashboardData } from '@/lib/types';
@@ -91,6 +92,13 @@ export default function Dashboard() {
             {dashboardData.topHolders && dashboardData.topHolders.length > 0 && (
               <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
                 <TopHolders holders={dashboardData.topHolders} />
+              </div>
+            )}
+
+            {/* Transaction Timing Analysis */}
+            {dashboardData.timing && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <TransactionTimingAnalytics timing={dashboardData.timing} />
               </div>
             )}
 

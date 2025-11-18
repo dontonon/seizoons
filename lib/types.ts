@@ -156,6 +156,7 @@ export interface DashboardData {
   onchain: OnchainAnalytics;
   twitter: TwitterMetrics;
   advanced?: AdvancedAnalytics;
+  timing?: TransactionTiming;
   topTokens?: PopularToken[];
   topHolders?: TopHolder[];
   lastUpdated: string;

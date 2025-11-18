@@ -66,22 +66,26 @@ export async function GET() {
     // Fetch wallet analytics and token balances if we have addresses
     let walletAnalyticsData = null;
     let tokenBalancesData = null;
+    let advancedAnalyticsData = null;
 
     if (holderAddresses.length > 0) {
       try {
         const walletAnalyticsModule = await import('../onchain/wallet-analytics/route');
         const tokenBalancesModule = await import('../onchain/token-balances/route');
+        const advancedAnalyticsModule = await import('../onchain/advanced-analytics/route');
 
         const addressesParam = holderAddresses.join(',');
 
         // Create request objects for each API
         const walletAnalyticsReq = new Request(`http://localhost:3000/api/onchain/wallet-analytics?addresses=${addressesParam}`);
         const tokenBalancesReq = new Request(`http://localhost:3000/api/onchain/token-balances?addresses=${addressesParam}`);
+        const advancedAnalyticsReq = new Request(`http://localhost:3000/api/onchain/advanced-analytics?addresses=${addressesParam}`);
 
-        console.log('🔄 Fetching wallet analytics and token balances...');
-        const [walletAnalyticsRes, tokenBalancesRes] = await Promise.all([
+        console.log('🔄 Fetching wallet analytics, token balances, and timing analytics...');
+        const [walletAnalyticsRes, tokenBalancesRes, advancedAnalyticsRes] = await Promise.all([
           walletAnalyticsModule.GET(walletAnalyticsReq),
           tokenBalancesModule.GET(tokenBalancesReq),
+          advancedAnalyticsModule.GET(advancedAnalyticsReq),
         ]);
 
         if (walletAnalyticsRes.ok) {
@@ -92,6 +96,11 @@ export async function GET() {
         if (tokenBalancesRes.ok) {
           tokenBalancesData = await tokenBalancesRes.json();
           console.log('✅ Token balances:', tokenBalancesData);
+        }
+
+        if (advancedAnalyticsRes.ok) {
+          advancedAnalyticsData = await advancedAnalyticsRes.json();
+          console.log('✅ Advanced analytics (timing):', advancedAnalyticsData);
         }
       } catch (err) {
         console.error('⚠️ Error fetching analytics:', err);
@@ -141,6 +150,7 @@ export async function GET() {
     const dashboardData: DashboardData = {
       onchain: onchainAnalytics,
       twitter: twitterData.metrics,
+      timing: advancedAnalyticsData?.analytics?.timing || undefined,
       topTokens: tokenBalancesData?.topTokens || [],
       topHolders,
       lastUpdated: new Date().toISOString(),

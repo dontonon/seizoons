@@ -161,7 +161,7 @@ export default function OnchainAnalytics({ data }: OnchainAnalyticsProps) {
           </div>
           <p className="mt-4 text-sm text-gray-500 dark:text-gray-400">
             {calculatePercentage(
-              data.walletAgeDistribution.experienced + data.walletAgeDistribution.veteran,
+              data.walletAgeDistribution.intermediate + data.walletAgeDistribution.experienced + data.walletAgeDistribution.veteran,
               data.totalHolders
             )}% of holders are experienced crypto users (1+ year). OGs with 5+ years represent true believers.
           </p>
