@@ -160,6 +160,7 @@ export async function GET() {
       chainActivity: advancedAnalyticsData?.chainActivity || [],
       multiChainUsers: advancedAnalyticsData?.multiChainUsers || 0,
       nftCollections: advancedAnalyticsData?.nftCollections || [],
+      geographic: advancedAnalyticsData?.geographic || undefined,
       topTokens: tokenBalancesData?.topTokens || [],
       topHolders,
       lastUpdated: new Date().toISOString(),

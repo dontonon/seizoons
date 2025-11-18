@@ -176,6 +176,38 @@ export interface NFTCollection {
 }
 
 /**
+ * Geographic Region with timezone-based activity
+ */
+export interface GeographicRegion {
+  region: string;
+  timezone: string; // e.g., "UTC-8 (PST)", "UTC+1 (CET)"
+  holderCount: number;
+  percentage: number;
+  peakActivityHour: number; // 0-23 in local time
+  avgTransactionsPerDay: number;
+}
+
+/**
+ * Activity patterns by hour (UTC)
+ */
+export interface HourlyActivity {
+  hour: number; // 0-23 UTC
+  transactionCount: number;
+  activeWallets: number;
+}
+
+/**
+ * Geographic Distribution with timezone inference
+ */
+export interface GeographicDistribution {
+  regions: GeographicRegion[];
+  hourlyActivity: HourlyActivity[]; // 24-hour UTC activity pattern
+  globalCoverage: number; // % of wallets from 3+ timezones
+  topRegion: string;
+  diversityScore: number; // 0-100, higher = more geographically diverse
+}
+
+/**
  * Dashboard data combining all analytics
  */
 export interface DashboardData {
@@ -191,6 +223,7 @@ export interface DashboardData {
   chainActivity?: ChainActivity[];
   multiChainUsers?: number;
   nftCollections?: NFTCollection[];
+  geographic?: GeographicDistribution;
   topTokens?: PopularToken[];
   topHolders?: TopHolder[];
   lastUpdated: string;

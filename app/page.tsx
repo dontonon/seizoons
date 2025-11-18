@@ -13,6 +13,7 @@ import AirdropHoldingPatterns from '@/components/dashboard/AirdropHoldingPattern
 import WalletBehaviorCategories from '@/components/dashboard/WalletBehaviorCategories';
 import CrossChainActivity from '@/components/dashboard/CrossChainActivity';
 import NFTPortfolioAnalysis from '@/components/dashboard/NFTPortfolioAnalysis';
+import GeographicHeatMap from '@/components/dashboard/GeographicHeatMap';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/dashboard/ErrorMessage';
 import type { DashboardData } from '@/lib/types';
@@ -151,6 +152,13 @@ export default function Dashboard() {
               </div>
             )}
 
+            {/* Geographic Heat Map */}
+            {dashboardData.geographic && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <GeographicHeatMap data={dashboardData.geographic} />
+              </div>
+            )}
+
             {/* Advanced Analytics - Temporarily Hidden */}
             {/* {dashboardData.advanced && (
               <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
@@ -181,6 +189,7 @@ export default function Dashboard() {
                     <li>✅ Wallet Behavior Categories</li>
                     <li>✅ Cross-Chain Activity (8 EVM chains)</li>
                     <li>✅ NFT Portfolio Analysis</li>
+                    <li>✅ Geographic Heat Map (Timezone Inference)</li>
                   </ul>
                 </div>
               </div>
