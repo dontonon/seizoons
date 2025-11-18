@@ -28,9 +28,9 @@ export async function GET() {
     // Alchemy Base URL for Base network
     const alchemyBaseUrl = `https://base-mainnet.g.alchemy.com/nft/v3/${alchemyApiKey}`;
 
-    // Fetch owners for the contract using Alchemy's NFT API
+    // Fetch owners for the contract using Alchemy's NFT API with token balances
     const response = await fetch(
-      `${alchemyBaseUrl}/getOwnersForContract?contractAddress=${NFT_CONTRACT}&withTokenBalances=false`,
+      `${alchemyBaseUrl}/getOwnersForContract?contractAddress=${NFT_CONTRACT}&withTokenBalances=true`,
       {
         method: 'GET',
         headers: {
@@ -48,15 +48,36 @@ export async function GET() {
 
     const data = await response.json();
 
+    console.log('📊 Alchemy response structure:', {
+      hasOwners: !!data.owners,
+      ownersCount: data.owners?.length,
+      firstOwnerSample: data.owners?.[0],
+    });
+
     // Extract holder information
-    // Alchemy returns { owners: ['0x...', '0x...'], pageKey?: string }
+    // Alchemy returns { owners: [{ ownerAddress: '0x...', tokenBalances: [...] }], pageKey?: string }
     const owners = data.owners || [];
     const totalHolders = owners.length;
 
+    // Convert to array of addresses with token counts
+    const holders = owners.map((owner: any) => {
+      const tokenCount = owner.tokenBalances?.length || 1;
+      return {
+        address: owner.ownerAddress || owner,
+        tokenCount,
+      };
+    });
+
+    console.log('📊 Holder distribution sample:', {
+      totalHolders,
+      firstHolder: holders[0],
+      holderWithMostNFTs: holders.reduce((max: any, h: any) => h.tokenCount > max.tokenCount ? h : max, holders[0]),
+    });
+
     return NextResponse.json({
       totalHolders,
-      holders: owners,
-      pageKey: data.pageKey || null, // For pagination if needed
+      holders, // Array of { address, tokenCount }
+      pageKey: data.pageKey || null,
       timestamp: new Date().toISOString(),
     });
 

@@ -74,11 +74,6 @@ export default function Dashboard() {
               <HeroStats data={dashboardData.onchain} />
             </div>
 
-            {/* Twitter Metrics */}
-            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
-              <TwitterMetrics data={dashboardData.twitter} />
-            </div>
-
             {/* Onchain Analytics */}
             <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
               <OnchainAnalytics data={dashboardData.onchain} />
@@ -91,12 +86,12 @@ export default function Dashboard() {
               </div>
             )}
 
-            {/* Advanced Analytics */}
-            {dashboardData.advanced && (
+            {/* Advanced Analytics - Temporarily Hidden */}
+            {/* {dashboardData.advanced && (
               <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
                 <AdvancedAnalytics data={dashboardData.advanced} />
               </div>
-            )}
+            )} */}
 
             {/* Info Banner */}
             <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl p-8 border border-purple-500/30">
