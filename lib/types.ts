@@ -157,6 +157,8 @@ export interface DashboardData {
   twitter: TwitterMetrics;
   advanced?: AdvancedAnalytics;
   timing?: TransactionTiming;
+  defiProtocols?: DeFiProtocolUsage[];
+  defiAdoption?: number;
   topTokens?: PopularToken[];
   topHolders?: TopHolder[];
   lastUpdated: string;
