@@ -153,6 +153,8 @@ export async function GET() {
       timing: advancedAnalyticsData?.analytics?.timing || undefined,
       defiProtocols: advancedAnalyticsData?.analytics?.defiProtocols || [],
       defiAdoption: advancedAnalyticsData?.analytics?.defiAdoption || 0,
+      airdrops: advancedAnalyticsData?.analytics?.airdrops || [],
+      airdropHunters: advancedAnalyticsData?.analytics?.airdropHunters || 0,
       topTokens: tokenBalancesData?.topTokens || [],
       topHolders,
       lastUpdated: new Date().toISOString(),

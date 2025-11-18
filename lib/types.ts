@@ -159,6 +159,8 @@ export interface DashboardData {
   timing?: TransactionTiming;
   defiProtocols?: DeFiProtocolUsage[];
   defiAdoption?: number;
+  airdrops?: AirdropHolding[];
+  airdropHunters?: number;
   topTokens?: PopularToken[];
   topHolders?: TopHolder[];
   lastUpdated: string;

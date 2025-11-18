@@ -9,6 +9,7 @@ import PopularTokens from '@/components/dashboard/PopularTokens';
 import TopHolders from '@/components/dashboard/TopHolders';
 import TransactionTimingAnalytics from '@/components/dashboard/TransactionTimingAnalytics';
 import DeFiProtocolUsage from '@/components/dashboard/DeFiProtocolUsage';
+import AirdropHoldingPatterns from '@/components/dashboard/AirdropHoldingPatterns';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/dashboard/ErrorMessage';
 import type { DashboardData } from '@/lib/types';
@@ -109,6 +110,16 @@ export default function Dashboard() {
                 <DeFiProtocolUsage
                   protocols={dashboardData.defiProtocols}
                   defiAdoption={dashboardData.defiAdoption || 0}
+                />
+              </div>
+            )}
+
+            {/* Airdrop Holding Patterns */}
+            {dashboardData.airdrops && dashboardData.airdrops.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <AirdropHoldingPatterns
+                  airdrops={dashboardData.airdrops}
+                  airdropHunters={dashboardData.airdropHunters || 0}
                 />
               </div>
             )}
