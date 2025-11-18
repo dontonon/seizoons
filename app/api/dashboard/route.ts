@@ -5,33 +5,39 @@ import type { DashboardData, OnchainAnalytics } from '@/lib/types';
  * API Route: Dashboard Data Aggregation
  *
  * This is the main endpoint that orchestrates fetching data from all sources
- * (Mintify, Base chain, Alchemy, Twitter) and combines them into a unified
- * dashboard response.
- *
- * This is what the frontend will call to get all dashboard data at once.
+ * (Alchemy, Twitter) and combines them into a unified dashboard response.
  */
 export async function GET() {
   try {
-    const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+    console.log('🔍 Dashboard API starting...');
 
-    // Fetch all data in parallel for better performance
-    // Using Alchemy API for holder data (provides addresses array)
+    // Import and call other API handlers directly (no HTTP needed)
+    const holdersModule = await import('../nft/holders-alchemy/route');
+    const twitterModule = await import('../twitter/metrics/route');
+
+    // Call the handlers directly
     const [holdersResponse, twitterResponse] = await Promise.all([
-      fetch(`${baseUrl}/api/nft/holders-alchemy`),
-      fetch(`${baseUrl}/api/twitter/metrics`),
+      holdersModule.GET(),
+      twitterModule.GET(),
     ]);
 
+    console.log('📊 Holders response status:', holdersResponse.status);
+    console.log('🐦 Twitter response status:', twitterResponse.status);
+
     if (!holdersResponse.ok) {
-      const errorText = await holdersResponse.text();
-      throw new Error(`Failed to fetch holders: ${errorText}`);
+      const errorData = await holdersResponse.json();
+      console.error('❌ Holders API failed:', errorData);
+      throw new Error(`Failed to fetch holders: ${JSON.stringify(errorData)}`);
     }
 
     const holdersData = await holdersResponse.json();
+    console.log('✅ Holders data:', { totalHolders: holdersData.totalHolders, holdersCount: holdersData.holders?.length });
 
     // Twitter is optional - use fallback if it fails
     let twitterData;
     if (twitterResponse.ok) {
       twitterData = await twitterResponse.json();
+      console.log('✅ Twitter data:', { totalMembers: twitterData.metrics?.totalMembers });
     } else {
       console.log('⚠️ Twitter API failed, using fallback');
       twitterData = {
@@ -47,55 +53,28 @@ export async function GET() {
 
     // Get list of holder addresses for wallet analysis
     const holderAddresses = (holdersData.holders || [])
-      .map((h: any) => h.address || h.owner || h)
-      .filter((addr: string) => addr && addr.startsWith('0x'))
+      .map((h: any) => {
+        // Holders can be just strings (addresses) or objects
+        if (typeof h === 'string') return h;
+        return h.address || h.owner || h;
+      })
+      .filter((addr: string) => addr && typeof addr === 'string' && addr.startsWith('0x'))
       .slice(0, 100); // Limit to 100 for performance
 
-    // Fetch wallet analytics, token balances, and advanced analytics
-    // Only if we have addresses to analyze
-    let walletAnalyticsResponse, tokenBalancesResponse, advancedAnalyticsResponse;
+    console.log('📍 Found addresses:', holderAddresses.length);
 
-    if (holderAddresses.length > 0) {
-      const addressesParam = holderAddresses.join(',');
-      const holdersJsonParam = encodeURIComponent(JSON.stringify(holdersData.holders || []));
-      [walletAnalyticsResponse, tokenBalancesResponse, advancedAnalyticsResponse] = await Promise.all([
-        fetch(`${baseUrl}/api/onchain/wallet-analytics?addresses=${addressesParam}`),
-        fetch(`${baseUrl}/api/onchain/token-balances?addresses=${addressesParam}`),
-        fetch(`${baseUrl}/api/onchain/advanced-analytics?addresses=${addressesParam}&holders=${holdersJsonParam}`),
-      ]);
-    }
-
-    const walletAnalyticsData = (walletAnalyticsResponse && walletAnalyticsResponse.ok)
-      ? await walletAnalyticsResponse.json()
-      : null;
-    const tokenBalancesData = (tokenBalancesResponse && tokenBalancesResponse.ok)
-      ? await tokenBalancesResponse.json()
-      : null;
-
-    let advancedAnalyticsData = null;
-    if (advancedAnalyticsResponse) {
-      try {
-        if (advancedAnalyticsResponse.ok) {
-          advancedAnalyticsData = await advancedAnalyticsResponse.json();
-        } else {
-          console.log('⚠️ Advanced analytics failed, skipping');
-        }
-      } catch (err) {
-        console.log('⚠️ Error parsing advanced analytics:', err);
-      }
-    }
-
-    // Calculate holder distribution based on token counts
+    // For now, skip the complex analytics that require Basescan API
+    // Just show basic holder data
     const holderDistribution = calculateHolderDistribution(holdersData.holders || []);
 
-    // Combine all onchain analytics
+    // Combine all onchain analytics with basic data
     const onchainAnalytics: OnchainAnalytics = {
       totalHolders: holdersData.totalHolders || 0,
-      uniqueTokensHeld: tokenBalancesData?.uniqueTokenCount || 0,
-      averageTransactionCount: walletAnalyticsData?.analytics?.averageTransactionCount || 0,
-      averageWalletAge: walletAnalyticsData?.analytics?.averageWalletAge || 0,
+      uniqueTokensHeld: 0, // Will show 0 if no token balance API
+      averageTransactionCount: 0, // Will show 0 if no wallet analytics
+      averageWalletAge: 0, // Will show 0 if no wallet analytics
       holderDistribution,
-      walletAgeDistribution: walletAnalyticsData?.analytics?.walletAgeDistribution || {
+      walletAgeDistribution: {
         new: 0,
         intermediate: 0,
         experienced: 0,
@@ -107,14 +86,15 @@ export async function GET() {
     const dashboardData: DashboardData = {
       onchain: onchainAnalytics,
       twitter: twitterData.metrics,
-      advanced: advancedAnalyticsData?.analytics || undefined,
+      advanced: undefined, // Advanced analytics disabled for now
       lastUpdated: new Date().toISOString(),
     };
 
+    console.log('✅ Dashboard API complete');
     return NextResponse.json(dashboardData);
 
   } catch (error) {
-    console.error('Error fetching dashboard data:', error);
+    console.error('❌ Error fetching dashboard data:', error);
     return NextResponse.json(
       {
         error: 'Failed to fetch dashboard data',
@@ -139,7 +119,14 @@ function calculateHolderDistribution(holders: any[]) {
 
   console.log('📊 Calculating holder distribution for', holders.length, 'holders');
 
+  // All demo holders have 1 NFT each (they're just addresses)
   holders.forEach(holder => {
+    // If holder is just a string address, assume 1 NFT
+    if (typeof holder === 'string') {
+      distribution.singleToken++;
+      return;
+    }
+
     // Try multiple fields for token count
     const count = holder.tokenCount || holder.balance || holder.tokenBalance || 1;
 
@@ -154,7 +141,6 @@ function calculateHolderDistribution(holders: any[]) {
   });
 
   console.log('📊 Distribution results:', distribution);
-  console.log('📊 Top holder example:', holders[0]);
 
   return distribution;
 }
