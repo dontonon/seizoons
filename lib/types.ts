@@ -46,10 +46,11 @@ export interface OnchainAnalytics {
     largeHolder: number; // 11+ NFTs
   };
   walletAgeDistribution: {
-    new: number; // < 30 days
-    intermediate: number; // 30-180 days
-    experienced: number; // 180-365 days
-    veteran: number; // 365+ days
+    veryNew: number; // < 6 months
+    new: number; // 6-12 months
+    intermediate: number; // 1-3 years
+    experienced: number; // 3-5 years
+    veteran: number; // 5+ years
   };
 }
 
@@ -78,10 +79,152 @@ export interface TwitterMetrics {
 }
 
 /**
+ * DeFi Protocol Usage
+ */
+export interface DeFiProtocolUsage {
+  protocolName: string;
+  protocolAddress: string;
+  userCount: number;
+  percentage: number;
+}
+
+/**
+ * Airdrop Token Holdings
+ */
+export interface AirdropHolding {
+  tokenName: string;
+  tokenSymbol: string;
+  tokenAddress: string;
+  holderCount: number;
+  percentage: number;
+}
+
+/**
+ * Transaction Timing Patterns
+ */
+export interface TransactionTiming {
+  hourDistribution: number[]; // 24 hours
+  dayDistribution: number[]; // 7 days (0=Sunday)
+  peakHour: number;
+  peakDay: string;
+}
+
+/**
+ * Wallet Behavior Categories
+ */
+export interface WalletBehaviorPattern {
+  category: 'Trader' | 'HODLer' | 'DeFi User' | 'NFT Collector' | 'Whale' | 'Bot';
+  count: number;
+  percentage: number;
+  avgTransactions: number;
+  avgGasSpent: number;
+}
+
+/**
+ * Cross-Chain Activity
+ */
+export interface ChainActivity {
+  chainName: string;
+  chainId: number;
+  activeWallets: number;
+  percentage: number;
+  totalTransactions: number;
+  avgGasSpent: number;
+}
+
+/**
+ * Advanced Analytics combining DeFi, Airdrops, Timing, and Behavior
+ */
+export interface AdvancedAnalytics {
+  defiProtocols: DeFiProtocolUsage[];
+  airdrops: AirdropHolding[];
+  timing: TransactionTiming;
+  behaviorPatterns: WalletBehaviorPattern[];
+  defiAdoption: number; // % of wallets using DeFi
+  airdropHunters: number; // % holding 3+ airdropped tokens
+}
+
+/**
+ * Popular Token with holder statistics
+ */
+export interface PopularToken extends TokenHolding {
+  holderCount: number;
+  holderPercentage: number;
+}
+
+/**
+ * Top Holder (whale) information
+ */
+export interface TopHolder {
+  address: string;
+  tokenCount: number;
+  rank: number;
+}
+
+/**
+ * NFT Collection held by community members
+ */
+export interface NFTCollection {
+  name: string;
+  symbol: string;
+  contractAddress: string;
+  chain: string; // Ethereum, Base, etc.
+  holderCount: number;
+  holderPercentage: number;
+  floorPrice?: number; // in ETH
+  isBlueChip: boolean;
+}
+
+/**
+ * Geographic Region with timezone-based activity
+ */
+export interface GeographicRegion {
+  region: string;
+  timezone: string; // e.g., "UTC-8 (PST)", "UTC+1 (CET)"
+  holderCount: number;
+  percentage: number;
+  peakActivityHour: number; // 0-23 in local time
+  avgTransactionsPerDay: number;
+}
+
+/**
+ * Activity patterns by hour (UTC)
+ */
+export interface HourlyActivity {
+  hour: number; // 0-23 UTC
+  transactionCount: number;
+  activeWallets: number;
+}
+
+/**
+ * Geographic Distribution with timezone inference
+ */
+export interface GeographicDistribution {
+  regions: GeographicRegion[];
+  hourlyActivity: HourlyActivity[]; // 24-hour UTC activity pattern
+  globalCoverage: number; // % of wallets from 3+ timezones
+  topRegion: string;
+  diversityScore: number; // 0-100, higher = more geographically diverse
+}
+
+/**
  * Dashboard data combining all analytics
  */
 export interface DashboardData {
   onchain: OnchainAnalytics;
   twitter: TwitterMetrics;
+  advanced?: AdvancedAnalytics;
+  timing?: TransactionTiming;
+  defiProtocols?: DeFiProtocolUsage[];
+  defiAdoption?: number;
+  airdrops?: AirdropHolding[];
+  airdropHunters?: number;
+  behaviorPatterns?: WalletBehaviorPattern[];
+  chainActivity?: ChainActivity[];
+  multiChainUsers?: number;
+  nftCollections?: NFTCollection[];
+  geographic?: GeographicDistribution;
+  topTokens?: PopularToken[];
+  topHolders?: TopHolder[];
   lastUpdated: string;
 }

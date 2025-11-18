@@ -19,10 +19,19 @@ export async function GET() {
     const bearerToken = process.env.TWITTER_BEARER_TOKEN;
 
     if (!bearerToken) {
-      return NextResponse.json(
-        { error: 'Twitter API credentials not configured' },
-        { status: 500 }
-      );
+      console.log('⚠️ Twitter API not configured - returning demo data');
+      // Return demo data so dashboard can still render
+      return NextResponse.json({
+        metrics: {
+          totalMembers: 145,
+          combinedFollowers: 2850000,
+          averageFollowersPerMember: 19655,
+          verifiedAccountsCount: 12,
+          topInfluencers: [],
+        },
+        timestamp: new Date().toISOString(),
+        demo: true,
+      });
     }
 
     // Fetch members from both Twitter lists
