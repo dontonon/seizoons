@@ -101,6 +101,26 @@ export async function GET() {
     // Calculate holder distribution
     const holderDistribution = calculateHolderDistribution(holdersData.holders || []);
 
+    // Get top 10 holders (whales)
+    const topHolders = (holdersData.holders || [])
+      .filter((h: any) => {
+        const count = h.tokenCount || h.balance || 1;
+        return count > 1; // Only holders with 2+ NFTs
+      })
+      .sort((a: any, b: any) => {
+        const countA = a.tokenCount || a.balance || 1;
+        const countB = b.tokenCount || b.balance || 1;
+        return countB - countA;
+      })
+      .slice(0, 10)
+      .map((h: any, index: number) => ({
+        address: h.address || h,
+        tokenCount: h.tokenCount || h.balance || 1,
+        rank: index + 1,
+      }));
+
+    console.log('🐋 Top 10 holders:', topHolders);
+
     // Combine all onchain analytics
     const onchainAnalytics: OnchainAnalytics = {
       totalHolders: holdersData.totalHolders || 0,
@@ -109,6 +129,7 @@ export async function GET() {
       averageWalletAge: walletAnalyticsData?.analytics?.averageWalletAge || 0,
       holderDistribution,
       walletAgeDistribution: walletAnalyticsData?.analytics?.walletAgeDistribution || {
+        veryNew: 0,
         new: 0,
         intermediate: 0,
         experienced: 0,
@@ -121,6 +142,7 @@ export async function GET() {
       onchain: onchainAnalytics,
       twitter: twitterData.metrics,
       topTokens: tokenBalancesData?.topTokens || [],
+      topHolders,
       lastUpdated: new Date().toISOString(),
     };
 

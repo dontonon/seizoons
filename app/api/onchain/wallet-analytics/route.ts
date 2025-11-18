@@ -145,6 +145,7 @@ function aggregateWalletAnalytics(analytics: WalletAnalytics[]): Partial<Onchain
       averageTransactionCount: 0,
       averageWalletAge: 0,
       walletAgeDistribution: {
+        veryNew: 0,
         new: 0,
         intermediate: 0,
         experienced: 0,
@@ -157,16 +158,19 @@ function aggregateWalletAnalytics(analytics: WalletAnalytics[]): Partial<Onchain
   const totalTransactions = analytics.reduce((sum, w) => sum + w.transactionCount, 0);
   const totalAge = analytics.reduce((sum, w) => sum + w.walletAge, 0);
 
-  // Calculate wallet age distribution
+  // Calculate wallet age distribution (5 categories)
   const ageDistribution = {
-    new: 0,
-    intermediate: 0,
-    experienced: 0,
-    veteran: 0,
+    veryNew: 0,      // < 6 months
+    new: 0,          // 6-12 months
+    intermediate: 0, // 1-3 years
+    experienced: 0,  // 3-5 years
+    veteran: 0,      // 5+ years
   };
 
   analytics.forEach(wallet => {
-    if (wallet.walletAge < WALLET_AGE_THRESHOLDS.NEW) {
+    if (wallet.walletAge < WALLET_AGE_THRESHOLDS.VERY_NEW) {
+      ageDistribution.veryNew++;
+    } else if (wallet.walletAge < WALLET_AGE_THRESHOLDS.NEW) {
       ageDistribution.new++;
     } else if (wallet.walletAge < WALLET_AGE_THRESHOLDS.INTERMEDIATE) {
       ageDistribution.intermediate++;

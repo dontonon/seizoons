@@ -46,10 +46,11 @@ export interface OnchainAnalytics {
     largeHolder: number; // 11+ NFTs
   };
   walletAgeDistribution: {
-    new: number; // < 30 days
-    intermediate: number; // 30-180 days
-    experienced: number; // 180-365 days
-    veteran: number; // 365+ days
+    veryNew: number; // < 6 months
+    new: number; // 6-12 months
+    intermediate: number; // 1-3 years
+    experienced: number; // 3-5 years
+    veteran: number; // 5+ years
   };
 }
 
@@ -140,6 +141,15 @@ export interface PopularToken extends TokenHolding {
 }
 
 /**
+ * Top Holder (whale) information
+ */
+export interface TopHolder {
+  address: string;
+  tokenCount: number;
+  rank: number;
+}
+
+/**
  * Dashboard data combining all analytics
  */
 export interface DashboardData {
@@ -147,5 +157,6 @@ export interface DashboardData {
   twitter: TwitterMetrics;
   advanced?: AdvancedAnalytics;
   topTokens?: PopularToken[];
+  topHolders?: TopHolder[];
   lastUpdated: string;
 }

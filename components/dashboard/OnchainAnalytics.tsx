@@ -24,13 +24,13 @@ export default function OnchainAnalytics({ data }: OnchainAnalyticsProps) {
     { name: '5+ NFTs (Whales)', value: data.holderDistribution.mediumHolder + data.holderDistribution.largeHolder, color: '#f59e0b' },
   ].filter(item => item.value > 0);
 
-  // Prepare data for wallet age distribution chart (5 categories for better granularity)
+  // Prepare data for wallet age distribution chart (5 categories)
   const walletAgeData = [
-    { name: '< 6mo', value: data.walletAgeDistribution.new, color: '#10b981' },
-    { name: '6-12mo', value: data.walletAgeDistribution.intermediate, color: '#3b82f6' },
-    { name: '1-3yr', value: data.walletAgeDistribution.experienced, color: '#8b5cf6' },
-    { name: '3-5yr', value: Math.floor(data.walletAgeDistribution.veteran * 0.4), color: '#ec4899' },
-    { name: '5+yr (OG)', value: Math.ceil(data.walletAgeDistribution.veteran * 0.6), color: '#f59e0b' },
+    { name: '< 6mo', value: data.walletAgeDistribution.veryNew, color: '#10b981' },
+    { name: '6-12mo', value: data.walletAgeDistribution.new, color: '#3b82f6' },
+    { name: '1-3yr', value: data.walletAgeDistribution.intermediate, color: '#8b5cf6' },
+    { name: '3-5yr', value: data.walletAgeDistribution.experienced, color: '#ec4899' },
+    { name: '5+yr (OG)', value: data.walletAgeDistribution.veteran, color: '#f59e0b' },
   ].filter(item => item.value > 0);
 
   return (

@@ -35,11 +35,14 @@ export const MAX_WALLETS_FOR_ADVANCED = 20; // Limit for advanced analytics (DeF
 
 /**
  * Wallet age thresholds (in days)
+ * 5 categories for better granularity
  */
 export const WALLET_AGE_THRESHOLDS = {
-  NEW: 30,
-  INTERMEDIATE: 180,
-  EXPERIENCED: 365,
+  VERY_NEW: 180,      // < 6 months
+  NEW: 365,           // 6-12 months
+  INTERMEDIATE: 1095, // 1-3 years
+  EXPERIENCED: 1825,  // 3-5 years
+  // 5+ years = veteran
 };
 
 /**

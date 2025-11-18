@@ -6,6 +6,7 @@ import AdvancedAnalytics from '@/components/dashboard/AdvancedAnalytics';
 import TwitterMetrics from '@/components/dashboard/TwitterMetrics';
 import HeroStats from '@/components/dashboard/HeroStats';
 import PopularTokens from '@/components/dashboard/PopularTokens';
+import TopHolders from '@/components/dashboard/TopHolders';
 import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
 import ErrorMessage from '@/components/dashboard/ErrorMessage';
 import type { DashboardData } from '@/lib/types';
@@ -83,6 +84,13 @@ export default function Dashboard() {
             {dashboardData.topTokens && dashboardData.topTokens.length > 0 && (
               <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
                 <PopularTokens tokens={dashboardData.topTokens} />
+              </div>
+            )}
+
+            {/* Top 10 Holders */}
+            {dashboardData.topHolders && dashboardData.topHolders.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <TopHolders holders={dashboardData.topHolders} />
               </div>
             )}
 
