@@ -15,8 +15,9 @@ export default function HeroStats({ data }: HeroStatsProps) {
   // Calculate whale count (5+ NFTs)
   const whaleCount = data.holderDistribution.mediumHolder + data.holderDistribution.largeHolder;
 
-  // Calculate crypto veterans (3+ year old wallets)
-  const veteranPercentage = data.walletAgeDistribution.experienced + data.walletAgeDistribution.veteran;
+  // Calculate crypto veterans (3+ year old wallets) as percentage
+  const veteranCount = data.walletAgeDistribution.experienced + data.walletAgeDistribution.veteran;
+  const veteranPercentage = Math.round((veteranCount / data.totalHolders) * 100);
 
   const stats = [
     {
