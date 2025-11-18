@@ -155,6 +155,7 @@ export async function GET() {
       defiAdoption: advancedAnalyticsData?.analytics?.defiAdoption || 0,
       airdrops: advancedAnalyticsData?.analytics?.airdrops || [],
       airdropHunters: advancedAnalyticsData?.analytics?.airdropHunters || 0,
+      behaviorPatterns: advancedAnalyticsData?.analytics?.behaviorPatterns || [],
       topTokens: tokenBalancesData?.topTokens || [],
       topHolders,
       lastUpdated: new Date().toISOString(),

@@ -161,6 +161,7 @@ export interface DashboardData {
   defiAdoption?: number;
   airdrops?: AirdropHolding[];
   airdropHunters?: number;
+  behaviorPatterns?: WalletBehaviorPattern[];
   topTokens?: PopularToken[];
   topHolders?: TopHolder[];
   lastUpdated: string;
