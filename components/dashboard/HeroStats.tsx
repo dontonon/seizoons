@@ -1,5 +1,5 @@
-import { formatNumber, formatLargeNumber } from '@/lib/utils';
-import type { DashboardData } from '@/lib/types';
+import { formatNumber, calculatePercentage } from '@/lib/utils';
+import type { OnchainAnalytics } from '@/lib/types';
 
 /**
  * HeroStats Component
@@ -8,37 +8,40 @@ import type { DashboardData } from '@/lib/types';
  * These are the "hero" numbers that immediately show the value of the community.
  */
 interface HeroStatsProps {
-  data: DashboardData;
+  data: OnchainAnalytics;
 }
 
 export default function HeroStats({ data }: HeroStatsProps) {
+  // Calculate whale count (5+ NFTs)
+  const whaleCount = data.holderDistribution.mediumHolder + data.holderDistribution.largeHolder;
+
   const stats = [
     {
-      label: 'Total NFT Holders',
-      value: formatNumber(data.onchain.totalHolders),
+      label: 'Total Holders',
+      value: formatNumber(data.totalHolders),
       description: 'Unique wallet addresses',
       icon: '👥',
       color: 'from-blue-500 to-blue-600',
     },
     {
-      label: 'Combined Social Reach',
-      value: formatLargeNumber(data.twitter.combinedFollowers),
-      description: `${formatNumber(data.twitter.totalMembers)} community members`,
-      icon: '🐦',
-      color: 'from-sky-500 to-sky-600',
+      label: 'Whales',
+      value: formatNumber(whaleCount),
+      description: '5+ NFTs held',
+      icon: '🐋',
+      color: 'from-orange-500 to-orange-600',
     },
     {
-      label: 'Unique Tokens Held',
-      value: formatNumber(data.onchain.uniqueTokensHeld),
-      description: 'Different ERC20 tokens',
-      icon: '💎',
+      label: 'Avg Transactions',
+      value: formatNumber(data.averageTransactionCount),
+      description: 'Onchain activity',
+      icon: '⚡',
       color: 'from-purple-500 to-purple-600',
     },
     {
-      label: 'Average Wallet Age',
-      value: `${data.onchain.averageWalletAge}`,
-      description: 'Days (experienced users)',
-      icon: '⏱️',
+      label: 'Avg Wallet Age',
+      value: `${Math.round(data.averageWalletAge)} days`,
+      description: 'Experienced users',
+      icon: '🔥',
       color: 'from-emerald-500 to-emerald-600',
     },
   ];

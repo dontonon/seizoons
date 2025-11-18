@@ -1,79 +1,51 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-
-interface DashboardStats {
-  totalHolders: number;
-  twitterFollowers: number;
-  activeWallets: number;
-  averageWalletAge: number;
-  totalTransactions: number;
-  uniqueTokens: number;
-  communityMembers: number;
-  avgFollowersPerMember: number;
-  verifiedAccounts: number;
-  isLoading: boolean;
-}
+import OnchainAnalytics from '@/components/dashboard/OnchainAnalytics';
+import AdvancedAnalytics from '@/components/dashboard/AdvancedAnalytics';
+import TwitterMetrics from '@/components/dashboard/TwitterMetrics';
+import HeroStats from '@/components/dashboard/HeroStats';
+import PopularTokens from '@/components/dashboard/PopularTokens';
+import TopHolders from '@/components/dashboard/TopHolders';
+import TransactionTimingAnalytics from '@/components/dashboard/TransactionTimingAnalytics';
+import DeFiProtocolUsage from '@/components/dashboard/DeFiProtocolUsage';
+import AirdropHoldingPatterns from '@/components/dashboard/AirdropHoldingPatterns';
+import WalletBehaviorCategories from '@/components/dashboard/WalletBehaviorCategories';
+import CrossChainActivity from '@/components/dashboard/CrossChainActivity';
+import NFTPortfolioAnalysis from '@/components/dashboard/NFTPortfolioAnalysis';
+import GeographicHeatMap from '@/components/dashboard/GeographicHeatMap';
+import LoadingSpinner from '@/components/dashboard/LoadingSpinner';
+import ErrorMessage from '@/components/dashboard/ErrorMessage';
+import type { DashboardData } from '@/lib/types';
 
 export default function Dashboard() {
-  const [stats, setStats] = useState<DashboardStats>({
-    totalHolders: 0,
-    twitterFollowers: 0,
-    activeWallets: 0,
-    averageWalletAge: 0,
-    totalTransactions: 0,
-    uniqueTokens: 0,
-    communityMembers: 0,
-    avgFollowersPerMember: 0,
-    verifiedAccounts: 0,
-    isLoading: true,
-  });
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  const fetchDashboardData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const response = await fetch('/api/dashboard');
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch dashboard data: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+      setDashboardData(data);
+
+    } catch (err) {
+      console.error('Error fetching dashboard data:', err);
+      setError(err instanceof Error ? err.message : 'Failed to load dashboard');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   useEffect(() => {
-    async function fetchDashboardData() {
-      try {
-        // Fetch NFT holders from Alchemy (direct blockchain data)
-        const holdersPromise = fetch('/api/nft/holders-alchemy')
-          .then(res => res.json())
-          .catch(err => {
-            console.error('Error fetching holders:', err);
-            return { totalHolders: 0 };
-          });
-
-        // Fetch Twitter metrics
-        const twitterPromise = fetch('/api/twitter/metrics')
-          .then(res => res.json())
-          .catch(err => {
-            console.error('Error fetching Twitter metrics:', err);
-            return { metrics: null };
-          });
-
-        // Wait for both to complete
-        const [holdersData, twitterData] = await Promise.all([
-          holdersPromise,
-          twitterPromise,
-        ]);
-
-        const totalHolders = holdersData.totalHolders || 0;
-        const twitterMetrics = twitterData.metrics;
-
-        // Update stats with all data
-        setStats(prev => ({
-          ...prev,
-          totalHolders,
-          twitterFollowers: twitterMetrics?.combinedFollowers || 0,
-          communityMembers: twitterMetrics?.totalMembers || 0,
-          avgFollowersPerMember: twitterMetrics?.averageFollowersPerMember || 0,
-          verifiedAccounts: twitterMetrics?.verifiedAccountsCount || 0,
-          isLoading: false,
-        }));
-
-      } catch (error) {
-        console.error('Error fetching dashboard data:', error);
-        setStats(prev => ({ ...prev, isLoading: false }));
-      }
-    }
-
     fetchDashboardData();
   }, []);
 
@@ -86,99 +58,149 @@ export default function Dashboard() {
             🌙 Snoozies NFT Dashboard
           </h1>
           <p className="text-xl text-purple-200">
-            Real-time Community Analytics & Insights
+            Advanced Community Analytics & Wallet Intelligence
           </p>
         </header>
 
-        {/* Hero Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
-          <StatCard
-            title="Total Holders"
-            value={stats.isLoading ? '...' : stats.totalHolders.toLocaleString()}
-            subtitle="Unique wallet addresses"
-            icon="👥"
-          />
-          <StatCard
-            title="Twitter Community"
-            value={stats.isLoading ? '...' : stats.twitterFollowers > 0 ? stats.twitterFollowers.toLocaleString() : 'Setup API'}
-            subtitle="Combined followers"
-            icon="🐦"
-          />
-          <StatCard
-            title="Onchain Activity"
-            value={stats.isLoading ? '...' : 'Coming soon'}
-            subtitle="Active wallets (30d)"
-            icon="⛓️"
-          />
-        </div>
+        {/* Loading State */}
+        {isLoading && (
+          <div className="flex justify-center items-center min-h-[400px]">
+            <LoadingSpinner />
+          </div>
+        )}
 
-        {/* Main Content */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
-          {/* Onchain Analytics */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <span className="mr-3">⛓️</span>
-              Onchain Analytics
-            </h2>
-            <div className="space-y-4">
-              <MetricRow
-                label="Average Wallet Age"
-                value={stats.isLoading ? '...' : stats.averageWalletAge > 0 ? `${Math.round(stats.averageWalletAge / 30)} months` : 'Coming soon'}
-              />
-              <MetricRow
-                label="Total Transactions"
-                value={stats.isLoading ? '...' : stats.totalTransactions > 0 ? stats.totalTransactions.toLocaleString() : 'Coming soon'}
-              />
-              <MetricRow
-                label="Unique Tokens Held"
-                value={stats.isLoading ? '...' : stats.uniqueTokens > 0 ? stats.uniqueTokens.toString() : 'Coming soon'}
-              />
-              <MetricRow label="Average Gas Spent" value="Coming soon" />
+        {/* Error State */}
+        {error && !isLoading && (
+          <ErrorMessage message={error} onRetry={fetchDashboardData} />
+        )}
+
+        {/* Dashboard Content */}
+        {!isLoading && !error && dashboardData && (
+          <div className="space-y-8">
+            {/* Hero Stats */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+              <HeroStats data={dashboardData.onchain} />
+            </div>
+
+            {/* Onchain Analytics */}
+            <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+              <OnchainAnalytics data={dashboardData.onchain} />
+            </div>
+
+            {/* Popular Tokens */}
+            {dashboardData.topTokens && dashboardData.topTokens.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <PopularTokens tokens={dashboardData.topTokens} />
+              </div>
+            )}
+
+            {/* Top 10 Holders */}
+            {dashboardData.topHolders && dashboardData.topHolders.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <TopHolders holders={dashboardData.topHolders} />
+              </div>
+            )}
+
+            {/* Transaction Timing Analysis */}
+            {dashboardData.timing && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <TransactionTimingAnalytics timing={dashboardData.timing} />
+              </div>
+            )}
+
+            {/* DeFi Protocol Usage */}
+            {dashboardData.defiProtocols && dashboardData.defiProtocols.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <DeFiProtocolUsage
+                  protocols={dashboardData.defiProtocols}
+                  defiAdoption={dashboardData.defiAdoption || 0}
+                />
+              </div>
+            )}
+
+            {/* Airdrop Holding Patterns */}
+            {dashboardData.airdrops && dashboardData.airdrops.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <AirdropHoldingPatterns
+                  airdrops={dashboardData.airdrops}
+                  airdropHunters={dashboardData.airdropHunters || 0}
+                />
+              </div>
+            )}
+
+            {/* Wallet Behavior Categories */}
+            {dashboardData.behaviorPatterns && dashboardData.behaviorPatterns.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <WalletBehaviorCategories patterns={dashboardData.behaviorPatterns} />
+              </div>
+            )}
+
+            {/* Cross-Chain Activity */}
+            {dashboardData.chainActivity && dashboardData.chainActivity.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <CrossChainActivity
+                  chains={dashboardData.chainActivity}
+                  multiChainUsers={dashboardData.multiChainUsers || 0}
+                />
+              </div>
+            )}
+
+            {/* NFT Portfolio Analysis */}
+            {dashboardData.nftCollections && dashboardData.nftCollections.length > 0 && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <NFTPortfolioAnalysis collections={dashboardData.nftCollections} />
+              </div>
+            )}
+
+            {/* Geographic Heat Map */}
+            {dashboardData.geographic && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <GeographicHeatMap data={dashboardData.geographic} />
+              </div>
+            )}
+
+            {/* Advanced Analytics - Temporarily Hidden */}
+            {/* {dashboardData.advanced && (
+              <div className="bg-white/5 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
+                <AdvancedAnalytics data={dashboardData.advanced} />
+              </div>
+            )} */}
+
+            {/* Info Banner */}
+            <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl p-8 border border-purple-500/30">
+              <h3 className="text-2xl font-bold text-white mb-4">
+                🚀 Advanced Analytics Powered By
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-purple-100">
+                <div>
+                  <h4 className="font-semibold text-white mb-2">Blockchain Data</h4>
+                  <ul className="space-y-1 text-sm">
+                    <li>✅ Alchemy NFT API - Real holder data</li>
+                    <li>✅ Basescan API - Transaction history</li>
+                    <li>✅ Base RPC - Token balances</li>
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white mb-2">Analytics Features</h4>
+                  <ul className="space-y-1 text-sm">
+                    <li>✅ DeFi Protocol Usage (Cross-Chain)</li>
+                    <li>✅ Airdrop Holdings Patterns</li>
+                    <li>✅ Transaction Timing Analysis</li>
+                    <li>✅ Wallet Behavior Categories</li>
+                    <li>✅ Cross-Chain Activity (8 EVM chains)</li>
+                    <li>✅ NFT Portfolio Analysis</li>
+                    <li>✅ Geographic Heat Map (Timezone Inference)</li>
+                  </ul>
+                </div>
+              </div>
+              <div className="mt-6 text-purple-200">
+                <p className="text-sm">
+                  Last updated: {new Date(dashboardData.lastUpdated).toLocaleString()}
+                </p>
+              </div>
             </div>
           </div>
-
-          {/* Twitter Metrics */}
-          <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-purple-500/20">
-            <h2 className="text-2xl font-bold text-white mb-6 flex items-center">
-              <span className="mr-3">🐦</span>
-              Twitter Metrics
-            </h2>
-            <div className="space-y-4">
-              <MetricRow
-                label="Community Members"
-                value={stats.isLoading ? '...' : stats.communityMembers > 0 ? stats.communityMembers.toLocaleString() : 'Setup API'}
-              />
-              <MetricRow
-                label="Avg Followers/Member"
-                value={stats.isLoading ? '...' : stats.avgFollowersPerMember > 0 ? `${(stats.avgFollowersPerMember / 1000).toFixed(1)}K` : 'Setup API'}
-              />
-              <MetricRow
-                label="Verified Accounts"
-                value={stats.isLoading ? '...' : stats.verifiedAccounts > 0 ? stats.verifiedAccounts.toString() : 'Setup API'}
-              />
-              <MetricRow
-                label="Total Reach"
-                value={stats.isLoading ? '...' : stats.twitterFollowers > 0 ? `${(stats.twitterFollowers / 1000000).toFixed(1)}M` : 'Setup API'}
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Info Banner */}
-        <div className="bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-2xl p-8 border border-purple-500/30">
-          <h3 className="text-2xl font-bold text-white mb-4">
-            🚀 Dashboard Connected to Real Data
-          </h3>
-          <p className="text-purple-100 text-lg mb-4">
-            Your Snoozies NFT Dashboard is now fetching real data from multiple sources.
-          </p>
-          <ul className="text-purple-200 space-y-2">
-            <li>✅ Alchemy NFT API - Real holder data from blockchain</li>
-            <li>✅ Twitter API - Live community metrics</li>
-            <li>✅ Onchain Analytics - Wallet & token data ready</li>
-            <li>🎯 {stats.totalHolders > 0 ? `${stats.totalHolders} holders` : 'Loading...'} • {stats.communityMembers > 0 ? `${stats.communityMembers} Twitter members` : 'Loading Twitter...'}</li>
-          </ul>
-        </div>
+        )}
 
         {/* Footer */}
         <footer className="text-center mt-12 pb-8">
@@ -187,32 +209,6 @@ export default function Dashboard() {
           </p>
         </footer>
       </div>
-    </div>
-  );
-}
-
-// Reusable Components
-function StatCard({ title, value, subtitle, icon }: {
-  title: string;
-  value: string;
-  subtitle: string;
-  icon: string;
-}) {
-  return (
-    <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-purple-500/20 hover:border-purple-500/40 transition-all">
-      <div className="text-4xl mb-3">{icon}</div>
-      <div className="text-3xl font-bold text-white mb-2">{value}</div>
-      <div className="text-lg font-semibold text-purple-200 mb-1">{title}</div>
-      <div className="text-sm text-purple-300">{subtitle}</div>
-    </div>
-  );
-}
-
-function MetricRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex justify-between items-center py-3 border-b border-white/10">
-      <span className="text-purple-200">{label}</span>
-      <span className="text-white font-semibold">{value}</span>
     </div>
   );
 }
